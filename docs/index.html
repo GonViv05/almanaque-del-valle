@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Almanaque del Valle</title>
+<meta name="description" content="La guía de Stardew Valley que conoce tu granja: en español, sin internet y conectada a tu partida.">
+<link rel="icon" href="img/chirivia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#221122; --ink2:#5b2b0f; --shadow:#ce9c5f; --peach:#f9d48f; --peach2:#ffe9b8; --wood:#b14e05; --wood2:#dc7b05; --line:#c98a3c; --sky:#4f93d6; --sky2:#a9d3f2; --grass:#5da130; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; color:var(--ink); font:23px/1.2 VT323,monospace; background:linear-gradient(var(--sky),var(--sky2) 620px,var(--grass) 620px,#4c8a26) no-repeat var(--grass); }
+img { display:block; max-width:100%; }
+.wrap { max-width:1080px; margin:auto; padding:0 16px; }
+h1,h2,h3 { font-family:"Pixelify Sans",monospace; margin:0; line-height:1.05; }
+.hero { text-align:center; padding:64px 0 48px; color:#fff; }
+.hero img { width:192px; height:192px; margin:0 auto 16px; image-rendering:pixelated; animation:bota 2.4s steps(6) infinite alternate; }
+.hero h1 { font-size:clamp(46px,9vw,84px); text-shadow:4px 4px 0 var(--wood); }
+.hero p { font-size:32px; margin:16px auto 28px; max-width:680px; text-shadow:2px 2px 0 #24588e; }
+@keyframes bota { to { transform:translateY(-14px); } }
+@media (prefers-reduced-motion:reduce) { .hero img { animation:none; } html { scroll-behavior:auto; } }
+.btn { display:inline-block; margin:6px; padding:10px 22px; font:700 24px "Pixelify Sans",monospace; color:var(--ink); text-decoration:none; background:var(--peach2); border:4px solid var(--wood); box-shadow:inset -3px -3px 0 var(--shadow),4px 4px 0 var(--ink2); }
+.btn:hover,.btn:focus-visible { background:#fff; transform:translate(2px,2px); box-shadow:inset -3px -3px 0 var(--shadow),2px 2px 0 var(--ink2); }
+.panel { background:var(--peach); border:6px solid var(--wood); outline:4px solid var(--wood2); outline-offset:-10px; padding:32px; margin:0 0 28px; box-shadow:0 6px 0 var(--ink2); }
+.panel h2 { font-size:42px; margin-bottom:16px; }
+.shot { border:5px solid var(--wood); width:100%; height:auto; }
+.lead { margin:18px 0 0; font-size:26px; }
+.feat { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px 28px; padding:0; margin:0; list-style:none; }
+.feat b { display:block; font:700 25px "Pixelify Sans",monospace; color:var(--ink2); }
+.gal { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr)); gap:20px; }
+figure { margin:0; }
+figcaption { margin-top:4px; color:var(--ink2); }
+.os { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr)); gap:24px; }
+.os h3 { font-size:29px; margin-bottom:8px; }
+pre { margin:8px 0 0; padding:12px; background:var(--ink); color:var(--peach2); overflow-x:auto; font:21px/1.15 VT323,monospace; }
+code { font:inherit; font-weight:bold; }
+a { color:var(--wood); }
+.note { background:var(--peach2); padding:12px 16px; margin:20px 0 0; border-left:6px solid var(--wood2); }
+footer { text-align:center; color:#fff; padding:8px 0 40px; text-shadow:1px 1px 0 #2d5413; }
+footer a { color:#fff; }
+</style>
+</head>
+<body>
+<header class="hero wrap">
+  <img src="img/chirivia.png" width="128" height="128" alt="Chirivía en pixel art">
+  <h1>Almanaque del Valle</h1>
+  <p>La guía de Stardew Valley que conoce tu granja. En español, sin internet y conectada a tu partida.</p>
+  <a class="btn" href="#instalar">Instalar</a>
+  <a class="btn" href="https://github.com/GonViv05/almanaque-del-valle">Ver en GitHub</a>
+</header>
+<main class="wrap">
+  <section class="panel">
+    <h2>Qué tenés que hacer hoy</h2>
+    <img class="shot" src="img/granja.png" width="1280" height="800" alt="Mi Granja: cultivos plantados, cosechas del día y cumpleaños">
+    <p class="lead">El almanaque lee tu partida cada vez que dormís: qué está listo para cosechar, quién cumple años y qué le regalás, sin salir a buscarlo.</p>
+  </section>
+  <section class="panel">
+    <h2>Todo el valle en ocho pestañas</h2>
+    <ul class="feat">
+      <li><b>Mi Granja</b>Lo plantado, las cosechas que vienen y los cumpleaños.</li>
+      <li><b>Cultivos</b>Tabla por estación y calculadora de semillas, abono y ganancia.</li>
+      <li><b>Peces</b>Filtros por estación, clima, hora y zona.</li>
+      <li><b>Animales</b>Ciclo de vida, productos y precios.</li>
+      <li><b>Aldeanos</b>Cumpleaños, regalos favoritos y por dónde andan.</li>
+      <li><b>Centro Cívico</b>Salas, lotes y de dónde sale cada objeto.</li>
+      <li><b>Perdibles</b>Lo que se te escapa si no lo hacés esta estación.</li>
+      <li><b>Estadísticas</b>Ingresos, niveles y contadores de tu partida.</li>
+    </ul>
+  </section>
+  <section class="panel">
+    <h2>Por dentro</h2>
+    <div class="gal">
+      <figure><img class="shot" loading="lazy" src="img/cultivos.png" width="1280" height="800" alt="Tabla de cultivos y calculadora"><figcaption>Cultivos y calculadora de ganancia</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/peces.png" width="1280" height="800" alt="Grilla de peces con filtros"><figcaption>Peces, con los que ya atrapaste marcados</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/aldeanos.png" width="1280" height="800" alt="Fichas de aldeanos"><figcaption>Aldeanos y sus zonas frecuentes</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/centro.png" width="1280" height="800" alt="Lotes del Centro Cívico"><figcaption>Centro Cívico, lote por lote</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/perdibles.png" width="1280" height="800" alt="Objetos perdibles de la estación"><figcaption>Perdibles y siembra más rentable</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/stats.png" width="1280" height="800" alt="Ingresos y niveles"><figcaption>Estadísticas de tu partida</figcaption></figure>
+    </div>
+  </section>
+  <section class="panel" id="instalar">
+    <h2>Instalar</h2>
+    <p>Necesitás Stardew Valley instalado (Steam o GOG). El instalador genera la wiki desde tu propia copia del juego.</p>
+    <div class="os">
+      <div>
+        <h3>Windows</h3>
+        <p>Descomprimí el ZIP y hacé doble clic en <code>instalar.bat</code>. Si falta Python o Node.js, los instala con winget.</p>
+        <a class="btn" href="https://github.com/GonViv05/almanaque-del-valle/archive/refs/heads/main.zip">Descargar ZIP</a>
+      </div>
+      <div>
+        <h3>Linux</h3>
+        <p>Con Python 3.9+ y Node.js 22.7+:</p>
+<pre>git clone https://github.com/GonViv05/almanaque-del-valle.git
+cd almanaque-del-valle
+sh instalar.sh</pre>
+      </div>
+    </div>
+    <p class="note">Tus partidas solo se leen. No es un mod y no hace falta SMAPI.</p>
+  </section>
+</main>
+<footer class="wrap">Proyecto de fans, sin relación con ConcernedApe. Stardew Valley y su arte son propiedad de ConcernedApe.</footer>
+</body>
+</html>

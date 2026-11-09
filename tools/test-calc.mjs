@@ -1,0 +1,28 @@
+// Tests de fórmulas contra datos reales. Uso: node test-calc.mjs
+import fs from 'node:fs'; import assert from 'node:assert/strict'; import vm from 'node:vm';
+const ctx = { window: {}, globalThis: {} }; ctx.window = ctx; vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(new URL('../data/data.js', import.meta.url), 'utf8'), ctx);
+vm.runInContext(fs.readFileSync(new URL('../js/calc.js', import.meta.url), 'utf8'), ctx);
+const { SDV, Calc } = ctx; const by = n => SDV.crops.find(c => SDV.objects[c.item].en === n);
+let n = 0; const t = (name, f) => { f(); n++; console.log('ok', name); };
+const sum = a => a.reduce((x, y) => x + y, 0);
+t('chirivía crece en 4 días y cuesta 20 en Pierre', () => { const c = by('Parsnip'); assert.equal(sum(c.phases), 4); assert.equal(c.sources.find(s => s.key === 'SeedShop').price, 20); });
+t('Joja cobra 25% más a no socios', () => assert.equal(by('Parsnip').sources.find(s => s.key === 'Joja').price, 25));
+t('Speed-Gro reduce chirivía a 3 días', () => assert.equal(sum(Calc.growthPhases(by('Parsnip').phases, .1, false, false)), 3));
+t('calidad nivel 0 sin abono: 1% oro', () => { const q = Calc.qualityChances(0, 0); assert.ok(Math.abs(q.gold - .01) < 1e-9); assert.ok(Math.abs(q.silver - .99 * .02) < 1e-9); });
+t('abono deluxe garantiza plata mínima', () => { const q = Calc.qualityChances(10, 3); assert.ok(q.normal < 1e-9); assert.ok(q.iridium > 0); });
+t('probabilidades suman 1', () => { for (const l of [0, 5, 10, 14]) for (const f of [0, 1, 2, 3]) { const q = Calc.qualityChances(l, f); assert.ok(Math.abs(q.normal + q.silver + q.gold + q.iridium - 1) < 1e-9); } });
+t('precios por calidad: melón 250', () => { assert.equal(Calc.unitPrice(250, 1, 1), 312); assert.equal(Calc.unitPrice(250, 2, 1), 375); assert.equal(Calc.unitPrice(250, 3, 1), 500); });
+t('chirivía día 1 replantando: 6 cosechas', () => assert.deepEqual([...Calc.harvestDays(by('Parsnip'), 1, { season: 0 }).days], [5, 9, 13, 17, 21, 25]));
+t('fresa rebrota cada 4 días', () => { const h = Calc.harvestDays(by('Strawberry'), 1, { season: 0 }); assert.equal(h.days[1] - h.days[0], 4); });
+t('maíz abarca verano y otoño (56 días)', () => assert.equal(Calc.harvestDays(by('Corn'), 1, { season: 1 }).end, 56));
+t('no se cosecha fuera de estación', () => assert.equal(Calc.harvestDays(by('Parsnip'), 1, { season: 1 }).days.length, 0));
+t('arándano: 3 frutos por cosecha', () => assert.equal(Calc.yieldPerHarvest(by('Blueberry'), 0), 3 + by('Blueberry').extra / (1 - by('Blueberry').extra)));
+t('vino 3x, jugo 2.25x, conserva 2x+50', () => { assert.equal(Calc.processed(by('Melon'), 'wine').price, 750); assert.equal(Calc.processed(by('Parsnip'), 'juice').price, 78); assert.equal(Calc.processed(by('Melon'), 'jelly').price, 550); assert.equal(Calc.processed(by('Parsnip'), 'wine'), null); });
+t('simulación coherente', () => { const c = by('Parsnip'); const r = Calc.simulate(c, { day: 1, season: 0, level: 0, qty: 10, seedPrice: 20, objectPrice: () => 0 }); assert.equal(r.harvests, 6); assert.equal(r.seedCost, 1200); assert.ok(r.revenue > 2000); assert.equal(Math.round(r.net), Math.round(r.revenue - r.cost)); });
+t('invernadero: un año completo', () => assert.equal(Calc.harvestDays(by('Parsnip'), 1, { season: 1, greenhouse: true }).end, 112));
+t('fruta milenaria madura en invernadero', () => assert.ok(Calc.harvestDays(by('Ancient Fruit'), 1, { season: 0, greenhouse: true }).days.length > 0));
+t('ajo solo desde el año 2', () => assert.ok(by('Garlic').sources.find(s => s.key === 'SeedShop').cond.some(c => c.year === 2)));
+t('cactus solo en interior', () => assert.equal(by('Cactus Fruit').indoor, true));
+t('gallina marrón se compra como la blanca', () => assert.equal(SDV.animals.find(a => a.id === 'Brown Chicken').buy, 400));
+console.log(n, 'tests ok');

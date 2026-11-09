@@ -1,0 +1,13 @@
+# Generado por el instalador desde la copia del juego de cada persona
+/assets/
+/data/
+/css/fonts.css
+/tools/.raw/
+/tools/schemes.json
+/tools/.contact.png
+
+# Dependencias y varios
+/tools/node_modules/
+/tools/.venv/
+__pycache__/
+graphify-out/
