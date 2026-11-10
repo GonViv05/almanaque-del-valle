@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Instalador de Almanaque del Valle (Windows y Linux).
+"""Instalador de Almanaque del Valle (Windows, macOS y Linux).
 
 Genera los datos y sprites desde tu propia copia de Stardew Valley, crea un acceso directo y,
 si querés, deja corriendo el vigía de la partida. La carpeta del juego y los guardados solo se leen.
@@ -10,9 +10,11 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 TOOLS = os.path.join(ROOT, 'tools')
 VENV = os.path.join(TOOLS, '.venv')
 WIN = os.name == 'nt'
+MAC = sys.platform == 'darwin'
 HOME = os.path.expanduser('~')
 SUBDIRS = ['steamapps/common/Stardew Valley']
 SERVICIO = 'almanaque-vigia'
+ETIQUETA_MAC = 'io.github.gonviv05.almanaque-vigia'
 
 
 class Fallo(Exception):
@@ -40,6 +42,8 @@ def bibliotecas_steam():
             pass
         for v in ('ProgramFiles(x86)', 'ProgramFiles'):
             if os.environ.get(v): raices.append(os.path.join(os.environ[v], 'Steam'))
+    elif MAC:
+        raices.append(os.path.join(HOME, 'Library/Application Support/Steam'))
     else:
         raices += [os.path.join(HOME, p) for p in ('.local/share/Steam', '.steam/steam', '.steam/root', '.var/app/com.valvesoftware.Steam/.local/share/Steam')]
     salida = list(raices)
@@ -52,8 +56,20 @@ def bibliotecas_steam():
     return salida
 
 
+def rutas_juego(c):
+    """(StardewValley.GameData.dll, carpeta Content) si el juego está en c, o None.
+    En Windows y Linux están juntos; en Mac, dentro del paquete: Contents/MacOS y Contents/Resources/Content."""
+    if not c: return None
+    for d, content in ((c, os.path.join(c, 'Content')),
+                       (os.path.join(c, 'Contents', 'MacOS'), os.path.join(c, 'Contents', 'Resources', 'Content')),
+                       (c, os.path.join(c, '..', 'Resources', 'Content'))):
+        dll = os.path.join(d, 'StardewValley.GameData.dll')
+        if os.path.isfile(dll) and os.path.isdir(content): return dll, os.path.normpath(content)
+    return None
+
+
 def es_juego(c):
-    return bool(c) and os.path.isdir(os.path.join(c, 'Content')) and os.path.isfile(os.path.join(c, 'StardewValley.GameData.dll'))
+    return rutas_juego(c) is not None
 
 
 def candidatos():
@@ -64,6 +80,8 @@ def candidatos():
             if os.environ.get(v):
                 yield os.path.join(os.environ[v], 'GOG Galaxy', 'Games', 'Stardew Valley')
                 yield os.path.join(os.environ[v], 'ModifiableWindowsApps', 'Stardew Valley')
+    elif MAC:
+        for d in ('/Applications', os.path.join(HOME, 'Applications')): yield os.path.join(d, 'Stardew Valley.app')
     else:
         yield os.path.join(HOME, 'GOG Games', 'Stardew Valley', 'game')
 
@@ -71,17 +89,19 @@ def candidatos():
 def buscar_juego(indicado, preguntar):
     if indicado:
         if es_juego(indicado): return indicado
-        raise Fallo(f'En "{indicado}" no están Content/ y StardewValley.GameData.dll.')
+        raise Fallo(f'En "{indicado}" no encontré los archivos del juego (Content/ y StardewValley.GameData.dll).')
     for c in candidatos():
         if es_juego(c): return c
     if not preguntar: raise Fallo('No encontré el juego. Indicá la carpeta con --juego "<ruta>".')
     print('No encontré Stardew Valley automáticamente.')
     print('En Steam: clic derecho en el juego > Administrar > Ver archivos locales, y copiá esa ruta.')
     while True:
+        if MAC: print('En Mac también podés arrastrar la carpeta (o Stardew Valley.app) a esta ventana.')
         c = input('Carpeta del juego (vacío para salir): ').strip().strip('"\'')
+        if not WIN: c = c.replace('\\ ', ' ')  # la Terminal escapa los espacios al arrastrar
         if not c: raise Fallo('Instalación cancelada.')
         if es_juego(os.path.expanduser(c)): return os.path.expanduser(c)
-        print('Ahí no están Content/ y StardewValley.GameData.dll. Probá de nuevo.')
+        print('Ahí no están los archivos del juego (Content/ y StardewValley.GameData.dll). Probá de nuevo.')
 
 
 def comprobar_programas():
@@ -104,10 +124,11 @@ def generar(juego, node, npm):
     py = python_venv()
     correr([py, '-m', 'pip', 'install', '--quiet', '--disable-pip-version-check', '-r', 'requirements.txt'])
     correr([npm, 'ci', '--silent', '--no-audit', '--no-fund'])
+    dll, content = rutas_juego(juego)
     paso(3, 'Leyendo el formato de datos de tu versión del juego')
-    correr([py, '00-schemas.py', os.path.join(juego, 'StardewValley.GameData.dll'), 'schemes.json'])
+    correr([py, '00-schemas.py', dll, 'schemes.json'])
     paso(4, 'Extrayendo datos y sprites del juego')
-    correr([node, '01-unpack.mjs'], env={'SDV_CONTENT': os.path.join(juego, 'Content')})
+    correr([node, '01-unpack.mjs'], env={'SDV_CONTENT': content})
     correr([py, '03-build-data.py'])
     correr([py, '04-assets.py'])
     partida = os.path.join(ROOT, 'data', 'partida.js')
@@ -135,9 +156,22 @@ def powershell(script, **valores):
     subprocess.run(['powershell', '-NoProfile', '-Command', script], env=env, check=True)
 
 
+def app_mac():
+    return os.path.join(HOME, 'Applications', 'Almanaque del Valle.app')
+
+
 def crear_acceso():
     indice = os.path.join(ROOT, 'index.html')
-    if WIN:
+    if MAC:
+        # Una mini app de AppleScript que abre la wiki en el navegador; queda en ~/Applications y la encuentra Spotlight.
+        texto = lambda t: '"' + t.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        if os.path.exists(app_mac()): shutil.rmtree(app_mac())
+        os.makedirs(os.path.dirname(app_mac()), exist_ok=True)
+        subprocess.run(['osacompile', '-o', app_mac(), '-e', f'do shell script "open " & quoted form of {texto(indice)}'], check=True, capture_output=True)
+        icns = os.path.join(app_mac(), 'Contents', 'Resources', 'applet.icns')
+        subprocess.run(['sips', '-s', 'format', 'icns', os.path.join(ROOT, 'assets/ui/icon.png'), '--out', icns], capture_output=True)
+        print(f'Acceso creado en {app_mac()} (buscalo con Spotlight: "Almanaque").')
+    elif WIN:
         powershell('$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:ALM_LNK);$s.TargetPath=$env:ALM_DST;$s.Save()',
                    ALM_LNK=os.path.join(escritorio_windows(), 'Almanaque del Valle.lnk'), ALM_DST=indice)
         print('Acceso directo creado en el Escritorio.')
@@ -155,6 +189,14 @@ def inicio_windows():
     return os.path.join(os.environ['APPDATA'], 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'almanaque-vigia.vbs')
 
 
+def plist_mac():
+    return os.path.join(HOME, 'Library', 'LaunchAgents', ETIQUETA_MAC + '.plist')
+
+
+def carpeta_protegida_mac():
+    return MAC and any(ROOT.startswith(os.path.join(HOME, d) + os.sep) for d in ('Desktop', 'Documents', 'Downloads'))
+
+
 def unidad_systemd():
     return os.path.join(HOME, '.config/systemd/user', SERVICIO + '.service')
 
@@ -166,6 +208,21 @@ def activar_vigia():
         with open(inicio_windows(), 'w', encoding='utf-16') as f: f.write(vbs)
         subprocess.Popen(['wscript', inicio_windows()])
         print('Vigía activo: arranca solo al iniciar sesión.')
+        return
+    if MAC:
+        import plistlib
+        log = os.path.join(HOME, 'Library', 'Logs', 'almanaque-vigia.log')
+        os.makedirs(os.path.dirname(plist_mac()), exist_ok=True); os.makedirs(os.path.dirname(log), exist_ok=True)
+        with open(plist_mac(), 'wb') as f:
+            plistlib.dump(dict(Label=ETIQUETA_MAC, ProgramArguments=[sys.executable, script], RunAtLoad=True, KeepAlive=dict(SuccessfulExit=False),
+                               ThrottleInterval=10, EnvironmentVariables=dict(PYTHONUNBUFFERED='1', PYTHONUTF8='1'), StandardOutPath=log, StandardErrorPath=log), f)
+        dominio = f'gui/{os.getuid()}'
+        subprocess.run(['launchctl', 'bootout', dominio, plist_mac()], capture_output=True)  # si ya estaba, se recarga
+        subprocess.run(['launchctl', 'bootstrap', dominio, plist_mac()], check=True)
+        print('Vigía activo: arranca solo al iniciar sesión.')
+        if carpeta_protegida_mac():
+            print('Ojo: esta carpeta está en Escritorio, Documentos o Descargas. macOS puede pedir permiso para que Python escriba acá;'
+                  ' si la wiki no se actualiza al dormir, mové la carpeta a tu carpeta personal y volvé a correr el instalador.')
         return
     if not shutil.which('systemctl'):
         print(f'Sin systemd: para activarlo, agregá a tu inicio de sesión: python3 "{script}"')
@@ -195,6 +252,11 @@ def desinstalar():
                    ALM_S=os.path.join(TOOLS, 'vigia.py'))
         borrar(inicio_windows())
         borrar(os.path.join(escritorio_windows(), 'Almanaque del Valle.lnk'))
+    elif MAC:
+        if os.path.exists(plist_mac()):
+            subprocess.run(['launchctl', 'bootout', f'gui/{os.getuid()}', plist_mac()], capture_output=True)
+            borrar(plist_mac())
+        if os.path.exists(app_mac()): shutil.rmtree(app_mac()); print('Borrado:', app_mac())
     else:
         if shutil.which('systemctl') and os.path.exists(unidad_systemd()):
             subprocess.run(['systemctl', '--user', 'disable', '--now', SERVICIO])

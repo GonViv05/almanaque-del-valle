@@ -304,8 +304,16 @@ def notify_windows(titulo, cuerpo, _icono):
     except (OSError, subprocess.SubprocessError): return False
 
 
+def notify_mac(titulo, cuerpo, _icono):
+    # El texto va como argumento del script: así no hay que escaparlo para AppleScript.
+    cmd = ['osascript', '-e', 'on run argv', '-e', 'display notification (item 2 of argv) with title "Almanaque del Valle" subtitle (item 1 of argv)', '-e', 'end run', titulo, cuerpo]
+    try: return subprocess.run(cmd, timeout=10, capture_output=True).returncode == 0
+    except (OSError, subprocess.SubprocessError): return False
+
+
 def notify_send(titulo, cuerpo, icono):
     if os.name == 'nt': return notify_windows(titulo, cuerpo, icono)
+    if sys.platform == 'darwin': return notify_mac(titulo, cuerpo, icono)
     cmd = ['notify-send', '-a', 'Almanaque del Valle', '-t', '15000']
     if icono: cmd += ['-i', icono]
     try: return subprocess.run(cmd + ['--', titulo, cuerpo], timeout=10, capture_output=True).returncode == 0
