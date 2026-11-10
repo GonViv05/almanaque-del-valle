@@ -110,6 +110,41 @@ def _lotes(cc, bundle_data, D):
     return out, areas, estandar
 
 
+def _objetos(items, out):
+    for it in items:
+        if it.get(XSI) != 'Object' or it.findtext('bigCraftable') == 'true': continue
+        i = bare(it.findtext('itemId'))
+        if i: out[i] = out.get(i, 0) + entero(it.findtext('stack'), 1)
+
+
+def _inventario(root, p):
+    """Objetos en la mochila, los cofres y la heladera: lo que se puede usar para fabricar o cocinar."""
+    out = {}
+    _objetos(p.findall('items/Item'), out)
+    for el in root.find('locations').iter():
+        if (el.get(XSI) == 'Chest' and el.findtext('playerChest') == 'true') or el.tag == 'fridge':
+            _objetos(el.findall('items/Item'), out)
+    return out
+
+
+def _maquinas(root, p):
+    """Objetos grandes (barriles, envasadoras...) colocados o guardados, por id.
+    Los sótanos vienen con toneles de fábrica: solo cuenta el propio y desde la tercera ampliación de la casa."""
+    out = {}
+    def contar(nodo):
+        for el in nodo.iter():
+            if el.findtext('bigCraftable') == 'true':
+                i = el.findtext('itemId')
+                if i: out[i] = out.get(i, 0) + 1
+    contar(p)
+    sotano = entero(p.findtext('houseUpgradeLevel')) >= 3
+    for loc in root.find('locations'):
+        n = loc.findtext('name') or ''
+        if n.startswith('Cellar') and not (n == 'Cellar' and sotano): continue
+        contar(loc)
+    return out
+
+
 def leer_partida(ruta, D):
     root = ET.parse(ruta).getroot()
     p = root.find('player')
@@ -136,12 +171,16 @@ def leer_partida(ruta, D):
                 animales.append(dict(tipo=a.findtext('type'), nombre=a.findtext('name'), edad=entero(a.findtext('age')), amistad=entero(a.findtext('friendshipTowardFarmer')), feliz=entero(a.findtext('happiness'))))
     lotes, areas, estandar = _lotes(cc, root.findall('bundleData/item'), D)
     profs = sorted(entero(e.text) for e in p.findall('professions/int'))
+    recetas = dict(craft={i.findtext('key/string'): entero(i.findtext('value/int')) for i in p.findall('craftingRecipes/item')},
+                   cook=[i.findtext('key/string') for i in p.findall('cookingRecipes/item')],
+                   cocinadas={bare(i.findtext('key/string')): entero(i.findtext('value/int')) for i in p.findall('recipesCooked/item')})
     return dict(
         fecha=dict(y=y, s=s, d=d, abs=abs_dia(y, s, d)), jugador=p.findtext('name'), granja=p.findtext('farmName'),
         dinero=entero(p.findtext('money')), total=entero(p.findtext('totalMoneyEarned')),
         niveles={k: entero(p.findtext(k + 'Level')) for k in ('farming', 'fishing', 'foraging', 'mining', 'combat')},
         profs=profs, enviados=enviados, stats=stats, peces=peces, amistad=amistad, cultivos=_agrupar(cultivos),
         muertos=sum(1 for c in cultivos if c.get('muerto')), animales=animales, lotes=lotes, areas=areas, lotesOk=estandar,
+        recetas=recetas, inventario=_inventario(root, p), maquinas=_maquinas(root, p),
         isla='willyBoatFixed' in mail or 'Visited_Island' in mail, invernadero=bool(areas and areas[0]) or 'ccPantry' in mail)
 
 
@@ -297,7 +336,7 @@ def resumen(snap, hist, nombre, stamp, D, pr):
         ok=True, stamp=stamp, save=nombre, jugador=snap['jugador'], granja=snap['granja'], fecha=snap['fecha'], dinero=snap['dinero'], total=snap['total'],
         niveles=snap['niveles'], farm=dict(level=snap['niveles']['farming'], tiller=1 in p, agri=5 in p, artisan=4 in p, fisher=6 in p, angler=8 in p),
         cultivos=snap['cultivos'], muertos=snap['muertos'], peces=snap['peces'], amistad=snap['amistad'], animales=snap['animales'], lotes=snap['lotes'], lotesOk=snap['lotesOk'],
-        isla=snap['isla'], invernadero=snap['invernadero'], stats=snap['stats'], cumples=cumples(snap, D),
+        isla=snap['isla'], invernadero=snap['invernadero'], stats=snap['stats'], cumples=cumples(snap, D), recetas=snap['recetas'], inventario=snap['inventario'], maquinas=snap['maquinas'],
         ingresos=dict(dias=filas, estaciones=list(estaciones.values()), hoy=ultimo.get('ingreso'), catHoy=ultimo.get('cat'), statsHoy=ultimo.get('statsHoy', {}), enviadoHoy=ultimo.get('enviadoHoy', {}),
                       acumulado=reparto(snap['enviados'], snap['total'], p, pr), top=top))
 

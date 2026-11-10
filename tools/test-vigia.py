@@ -44,6 +44,10 @@ ok(all(c['falta'] >= 0 for c in snap['cultivos']), 'días restantes no negativos
 ok(all(c['seed'] in {x['id'] for x in D['crops']} for c in snap['cultivos']), 'todas las semillas existen en los datos')
 ok(snap['isla'] is False and snap['invernadero'] is False, 'isla e invernadero sin desbloquear en esta partida')
 ok(snap['lotesOk'] is True, 'lotes estándar reconocidos')
+ok('Fried Egg' in snap['recetas']['cook'] and snap['recetas']['craft'].get('Wood Path', 0) > 0, f"recetas: {len(snap['recetas']['craft'])} de fabricación, {len(snap['recetas']['cook'])} de cocina")
+ok(all(k in {r['key'] for r in D['recipes']} for k in list(snap['recetas']['craft']) + snap['recetas']['cook']), 'todas las recetas aprendidas existen en los datos')
+ok(snap['inventario'].get('388', 0) > 0 and all(n > 0 for n in snap['inventario'].values()), f"inventario y cofres: {len(snap['inventario'])} objetos distintos, {snap['inventario'].get('388', 0)} de madera")
+ok(snap['maquinas'].get('130', 0) >= 5, f"máquinas y objetos grandes: {sum(snap['maquinas'].values())} ({snap['maquinas'].get('130', 0)} cofres)")
 ok(any(snap['lotes'].values()), 'hay progreso de lotes leído')
 
 print('Primer día: usa _old')

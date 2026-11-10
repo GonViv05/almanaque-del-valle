@@ -9,6 +9,11 @@ for d in ('sheets', 'ui', 'fonts', 'portraits', 'animals', 'characters'): os.mak
 def cp(src, dst): shutil.copy(os.path.join(RAW, src), os.path.join(A, dst))
 for s, d in [('Maps/springobjects.png', 'o'), ('TileSheets/Objects_2.png', 'o2'), ('TileSheets/crops.png', 'crops'), ('TileSheets/Craftables.png', 'big'), ('LooseSprites/JunimoNote.es-ES.png', 'junimo'), ('LooseSprites/stardewPanorama.png', 'panorama'), ('TileSheets/fruitTrees.png', 'trees')]:
     cp(s, f'sheets/{d}.png')
+# Pestaña Objetos: armas, herramientas, sombreros, muebles y la hoja de ropa (teñida como en el inventario).
+for s in ['TileSheets/weapons', 'TileSheets/tools', 'Characters/Farmer/hats', 'TileSheets/FreeCactuses'] + ['TileSheets/' + f[:-4] for f in sorted(os.listdir(os.path.join(RAW, 'TileSheets'))) if f.endswith('.png') and 'furniture' in f]:
+    cp(s + '.png', f'sheets/{s.split("/")[-1]}.png')
+import ropa
+ropa.render(RAW, os.path.join(A, 'sheets/ropa.png'))
 for f in os.listdir(os.path.join(RAW, 'Portraits')):
     if f.endswith('.png') and '_' not in f: cp('Portraits/' + f, 'portraits/' + f)
 # Iconos para las notificaciones de cumpleaños: primer retrato de cada hoja, en píxeles nítidos.
@@ -25,13 +30,17 @@ cur = Image.open(os.path.join(RAW, 'LooseSprites/Cursors.es-ES.png' if os.path.e
 men = Image.open(os.path.join(RAW, 'Maps/MenuTiles.png')).convert('RGBA')
 txt = Image.open(os.path.join(RAW, 'LooseSprites/textBox.png')).convert('RGBA')
 UI = dict(cursor=(0, 0, 16, 16), hand=(32, 0, 16, 16), coin=(193, 373, 9, 10), heart=(211, 428, 7, 6), heartE=(218, 428, 7, 6), qs=(338, 400, 8, 8), qg=(346, 400, 8, 8), qi=(346, 392, 8, 8),
-    tab=(16, 368, 16, 16), box=(384, 373, 18, 18), ok=(128, 256, 64, 64), cancel=(192, 256, 64, 64), left=(352, 495, 12, 11), right=(365, 495, 12, 11), up=(421, 459, 11, 12), down=(421, 472, 11, 12), bar=(435, 463, 6, 10), runner=(403, 383, 6, 6), chk0=(227, 425, 9, 9), chk1=(236, 425, 9, 9), ddbox=(433, 451, 3, 3), ddarrow=(437, 450, 10, 11), clock=(333, 431, 71, 43), sunny=(341, 421, 12, 8), rain=(365, 421, 12, 8), s0=(406, 441, 12, 8), s1=(406, 449, 12, 8), s2=(406, 457, 12, 8), s3=(406, 465, 12, 8), plank=(293, 360, 24, 24))
+    tab=(16, 368, 16, 16), box=(384, 373, 18, 18), ok=(128, 256, 64, 64), cancel=(192, 256, 64, 64), left=(352, 495, 12, 11), right=(365, 495, 12, 11), up=(421, 459, 11, 12), down=(421, 472, 11, 12), bar=(435, 463, 6, 10), runner=(403, 383, 6, 6), chk0=(227, 425, 9, 9), chk1=(236, 425, 9, 9), ddbox=(433, 451, 3, 3), ddarrow=(437, 450, 10, 11), clock=(333, 431, 71, 43), sunny=(341, 421, 12, 8), rain=(365, 421, 12, 8), digits=(368, 56, 50, 7), s0=(406, 441, 12, 8), s1=(406, 449, 12, 8), s2=(406, 457, 12, 8), s3=(406, 465, 12, 8), plank=(293, 360, 24, 24))
 for k, r in UI.items(): cur.crop((r[0], r[1], r[0] + r[2], r[1] + r[3])).save(os.path.join(A, f'ui/{k}.png'))
 for k in ('cursor', 'hand'): Image.open(os.path.join(A, f'ui/{k}.png')).resize((48, 48), Image.NEAREST).save(os.path.join(A, f'ui/{k}48.png'))
 Image.open(os.path.join(RAW, 'Maps/springobjects.png')).convert('RGBA').crop((0, 16, 16, 32)).resize((128, 128), Image.NEAREST).save(os.path.join(A, 'ui/icon.png'))
 men.crop((0, 256, 60, 60 + 256)).save(os.path.join(A, 'ui/menu.png'))
 men.crop((128, 128, 192, 192)).save(os.path.join(A, 'ui/slot.png'))
 txt.save(os.path.join(A, 'ui/textbox.png'))
+# Tablero del calendario del pueblo (con los días de la semana en español) y la estrella de los festivales.
+bb = Image.open(os.path.join(RAW, 'LooseSprites/Billboard.es-ES.png' if os.path.exists(os.path.join(RAW, 'LooseSprites/Billboard.es-ES.png')) else 'LooseSprites/Billboard.png')).convert('RGBA')
+bb.crop((0, 198, 301, 396)).save(os.path.join(A, 'ui/calendario.png'))
+bb.crop((140, 398, 150, 408)).save(os.path.join(A, 'ui/star.png'))
 # ---- fuentes: cada píxel de la fuente original pasa a ser un cuadrado en el TTF
 PX = 32
 def build(name, family):
