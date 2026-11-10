@@ -7,6 +7,7 @@ Sin dependencias: Python 3 estándar.
 """
 import argparse, json, os, subprocess, sys, tempfile, time
 import xml.etree.ElementTree as ET
+import idioma
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 
@@ -31,8 +32,20 @@ ANIMAL_CATS = {-5, -6, -18, -14}
 CROP_CATS = {-75, -79, -80}
 
 
-def cargar_datos(root=ROOT):
-    src = open(os.path.join(root, 'data/data.js'), encoding='utf8').read()
+# Textos de los avisos y de la consola, en el idioma del vigía (--idioma, o el del sistema).
+TEXTOS = {
+    'es': dict(nombre='Almanaque del Valle', hoy='Hoy cumple', manana='Mañana cumple', ama='Le encanta: {}.', gusta='Le gusta: {}.',
+               sin_partidas='No encontré partidas en ', fecha='{n}: día {d}, estación {s}, año {y}', marcha='Vigía en marcha:', incompleto='Guardado incompleto, reintento:'),
+    'en': dict(nombre='Valley Almanac', hoy='Birthday today:', manana='Birthday tomorrow:', ama='Loves: {}.', gusta='Likes: {}.',
+               sin_partidas='No saves found in ', fecha='{n}: day {d}, season {s}, year {y}', marcha='Watcher running:', incompleto='Save not finished, retrying:'),
+}
+TX = TEXTOS['es']
+
+
+def cargar_datos(root=ROOT, idioma='es'):
+    ruta = os.path.join(root, 'data/data.en.js')
+    if idioma != 'en' or not os.path.exists(ruta): ruta = os.path.join(root, 'data/data.js')
+    src = open(ruta, encoding='utf8').read()
     return json.loads(src[len('window.SDV='):].rstrip().rstrip(';'))
 
 
@@ -282,12 +295,12 @@ def cumples(snap, D):
 def avisar(hist, snap, c, root, notificar):
     """Manda cada aviso una sola vez. Devuelve False si alguno falló, para reintentar."""
     a, ok = snap['fecha']['abs'], True
-    for cuando, titulo in (('hoy', 'Hoy cumple'), ('manana', 'Mañana cumple')):
+    for cuando, titulo in (('hoy', TX['hoy']), ('manana', TX['manana'])):
         for v in c[cuando]:
             clave = f"{a}:{v['id']}:{cuando}"
             if clave in hist['notified']: continue
-            cuerpo = f"Le encanta: {', '.join(v['ama'])}."
-            if v['gusta']: cuerpo += f"\nLe gusta: {', '.join(v['gusta'])}."
+            cuerpo = TX['ama'].format(', '.join(v['ama']))
+            if v['gusta']: cuerpo += '\n' + TX['gusta'].format(', '.join(v['gusta']))
             icono = os.path.join(root, 'assets/ui/notif', v['tex'] + '.png')
             if notificar(f"{titulo} {v['name']}", cuerpo, icono if os.path.exists(icono) else None): hist['notified'].append(clave)
             else: ok = False
@@ -306,7 +319,7 @@ def notify_windows(titulo, cuerpo, _icono):
 
 def notify_mac(titulo, cuerpo, _icono):
     # El texto va como argumento del script: así no hay que escaparlo para AppleScript.
-    cmd = ['osascript', '-e', 'on run argv', '-e', 'display notification (item 2 of argv) with title "Almanaque del Valle" subtitle (item 1 of argv)', '-e', 'end run', titulo, cuerpo]
+    cmd = ['osascript', '-e', 'on run argv', '-e', 'display notification (item 2 of argv) with title (item 3 of argv) subtitle (item 1 of argv)', '-e', 'end run', titulo, cuerpo, TX['nombre']]
     try: return subprocess.run(cmd, timeout=10, capture_output=True).returncode == 0
     except (OSError, subprocess.SubprocessError): return False
 
@@ -314,7 +327,7 @@ def notify_mac(titulo, cuerpo, _icono):
 def notify_send(titulo, cuerpo, icono):
     if os.name == 'nt': return notify_windows(titulo, cuerpo, icono)
     if sys.platform == 'darwin': return notify_mac(titulo, cuerpo, icono)
-    cmd = ['notify-send', '-a', 'Almanaque del Valle', '-t', '15000']
+    cmd = ['notify-send', '-a', TX['nombre'], '-t', '15000']
     if icono: cmd += ['-i', icono]
     try: return subprocess.run(cmd + ['--', titulo, cuerpo], timeout=10, capture_output=True).returncode == 0
     except (OSError, subprocess.SubprocessError): return False
@@ -380,15 +393,18 @@ def main():
     ap.add_argument('--saves', default=SAVES); ap.add_argument('--salida', default=os.path.join(ROOT, 'data'))
     ap.add_argument('--una-vez', action='store_true', help='procesa la partida más reciente y termina')
     ap.add_argument('--sin-notificar', action='store_true')
+    ap.add_argument('--idioma', choices=idioma.IDIOMAS, help='idioma de los avisos (por defecto, el del sistema)')
     a = ap.parse_args()
-    D = cargar_datos(); pr = Precios(D)
+    global TX
+    lang = idioma.elegir(a.idioma); TX = TEXTOS[lang]
+    D = cargar_datos(idioma=lang); pr = Precios(D)
     notificar = (lambda *_: True) if a.sin_notificar else notify_send
     if a.una_vez:
         m = mas_reciente(a.saves)
-        if not m: sys.exit('No encontré partidas en ' + a.saves)
+        if not m: sys.exit(TX['sin_partidas'] + a.saves)
         snap, _ = procesar(m[2], m[3], a.salida, D, pr, notificar); f = snap['fecha']
-        print(f"{m[3]}: día {f['d']}, estación {f['s']}, año {f['y']}"); return
-    print('Vigía en marcha:', a.saves, flush=True)
+        print(TX['fecha'].format(n=m[3], d=f['d'], s=f['s'], y=f['y'])); return
+    print(TX['marcha'], a.saves, flush=True)
     hecho, espera, reintento = None, None, 0
     while True:
         m = mas_reciente(a.saves)
@@ -398,9 +414,9 @@ def main():
                 try:
                     snap, ok = procesar(m[2], m[3], a.salida, D, pr, notificar); hecho = firma
                     reintento = 0 if ok else time.monotonic() + 60
-                    f = snap['fecha']; print(f"{m[3]}: día {f['d']}, estación {f['s']}, año {f['y']}", flush=True)
+                    f = snap['fecha']; print(TX['fecha'].format(n=m[3], d=f['d'], s=f['s'], y=f['y']), flush=True)
                 except (ET.ParseError, OSError) as e:
-                    print('Guardado incompleto, reintento:', e, flush=True); espera = None
+                    print(TX['incompleto'], e, flush=True); espera = None
             else: espera = firma
         elif firma and reintento and time.monotonic() >= reintento:  # el demonio de notificaciones no estaba listo
             try:

@@ -18,23 +18,23 @@ function buscar(q) {
   return indice().map(x => { const i = x.q.indexOf(q); return i < 0 ? null : { x, sc: x.q === q ? 0 : i === 0 ? 1 : /[\s(-]/.test(x.q[i - 1]) ? 2 : 3 }; }).filter(Boolean)
     .sort((a, b) => a.sc - b.sc || PRI[a.x.k] - PRI[b.x.k] || a.x.n.length - b.x.n.length || a.x.n.localeCompare(b.x.n)).slice(0, 10).map(r => r.x);
 }
-const diasFest = f => `${f.d[0]}${f.d.length > 1 ? `–${f.d.at(-1)}` : ''} de ${SEASONS[f.s].toLowerCase()}`;
+const diasFest = f => T('{d} de {s}', { d: `${f.d[0]}${f.d.length > 1 ? `–${f.d.at(-1)}` : ''}`, s: lc(SEASONS[f.s]) });
 function resultado(x, i) {
   let ic = '', sub = '', k = '';
-  if (x.k === 'npc') { const v = vil(x.id), { sch } = agendaDel(v, state.season, state.day); ic = face(v, 40); k = 'Aldeano'; const fe = festivalesDel(state.season, state.day).find(f => !f.passive);
-    sub = fe && sch ? `Ese día va a ${fe.name}` : sch ? `A las ${hora(state.hora)}: ${dondeA(v, sch, state.hora).loc || 'en su casa'}` : `Siempre en ${v.home || 'el mismo lugar'}`; }
-  if (x.k === 'obj') { const o = obj(x.id); ic = itemSpr(x.id, 2); k = o.g || o.cn || 'Objeto'; sub = D.recipes.some(r => !r.big && r.id === x.id) ? 'Tiene receta' : ''; }
-  if (x.k === 'rec') { const r = D.recipes.find(r => r.key === x.id); ic = recSpr(r, 2); k = 'Fabricación'; sub = sabida(r) === false ? 'Sin aprender' : ''; }
-  if (x.k === 'fest') { const f = D.festivals.find(f => f.id === x.id); ic = `<i class="ui" style="width:20px;height:20px;background-image:url(assets/ui/star.png)"></i>`; k = 'Festival'; sub = diasFest(f); }
+  if (x.k === 'npc') { const v = vil(x.id), { sch } = agendaDel(v, state.season, state.day); ic = face(v, 40); k = T('Aldeano'); const fe = festivalesDel(state.season, state.day).find(f => !f.passive);
+    sub = fe && sch ? T('Ese día va a {f}', { f: fe.name }) : sch ? T('A las {h}: {l}', { h: hora(state.hora), l: dondeA(v, sch, state.hora).loc || T('en su casa') }) : T('Siempre en {l}', { l: v.home || T('el mismo lugar') }); }
+  if (x.k === 'obj') { const o = obj(x.id); ic = itemSpr(x.id, 2); k = o.g || o.cn || T('Objeto'); sub = D.recipes.some(r => !r.big && r.id === x.id) ? T('Tiene receta') : ''; }
+  if (x.k === 'rec') { const r = D.recipes.find(r => r.key === x.id); ic = recSpr(r, 2); k = T('Fabricación'); sub = sabida(r) === false ? T('Sin aprender') : ''; }
+  if (x.k === 'fest') { const f = D.festivals.find(f => f.id === x.id); ic = `<i class="ui" style="width:20px;height:20px;background-image:url(assets/ui/star.png)"></i>`; k = T('Festival'); sub = diasFest(f); }
   return `<li role="option" id="bres-${i}" data-i="${i}" aria-selected="false">${ic}<span>${esc(x.n)}${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</span><span class="k">${esc(k)}</span></li>`;
 }
 
-$('#buscar').innerHTML = `<label class="sr" for="bq">Buscar en el almanaque</label><input class="input" id="bq" type="search" placeholder="Buscar objeto, aldeano, receta… ( / )" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="bres" aria-autocomplete="list"><ul id="bres" role="listbox" aria-label="Resultados" hidden></ul>`;
+$('#buscar').innerHTML = `<label class="sr" for="bq">${T('Buscar en el almanaque')}</label><input class="input" id="bq" type="search" placeholder="${T('Buscar objeto, aldeano, receta… ( / )')}" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="bres" aria-autocomplete="list"><ul id="bres" role="listbox" aria-label="${T('Resultados')}" hidden></ul>`;
 const bq = $('#bq'), bres = $('#bres');
 let bLista = [], bAct = -1;
 function pintarResultados() {
   bLista = buscar(bq.value); bAct = bLista.length ? 0 : -1;
-  bres.innerHTML = bLista.length ? bLista.map(resultado).join('') : (bq.value.trim() ? '<li class="vacio" aria-disabled="true">Nada coincide con la búsqueda.</li>' : '');
+  bres.innerHTML = bLista.length ? bLista.map(resultado).join('') : (bq.value.trim() ? `<li class="vacio" aria-disabled="true">${T('Nada coincide con la búsqueda.')}</li>` : '');
   bres.hidden = !bq.value.trim(); bq.setAttribute('aria-expanded', String(!bres.hidden)); marcar();
 }
 function marcar() {
@@ -72,7 +72,7 @@ let fichaPrev = null;
 function abrirFicha(html) {
   if (velo.hidden) fichaPrev = document.activeElement;
   hideTip(); if (!calpop.hidden) { calVista.vuelta = null; cerrarCal(false); }
-  ficha.innerHTML = `<button type="button" class="cerrar" data-cerrar aria-label="Cerrar">${ui('cancel', 44, 44)}</button>${html}`;
+  ficha.innerHTML = `<button type="button" class="cerrar" data-cerrar aria-label="${T('Cerrar')}">${ui('cancel', 44, 44)}</button>${html}`;
   velo.hidden = false; ficha.scrollTop = 0; ficha.focus();
 }
 function cerrarFicha() {
@@ -117,16 +117,16 @@ velo.addEventListener('keydown', e => {
 const aMin = t => (Math.floor(t / 100) - 6) * 60 + t % 100, aHora = m => (6 + Math.floor(m / 60)) * 100 + m % 60;
 function fichaAldeano(id) {
   const v = vil(id); if (!v) return;
-  const fecha = `${DOW[(state.day - 1) % 7].toLowerCase()} ${state.day} de ${SEASONS[state.season].toLowerCase()}, año ${state.year}`;
+  const fecha = T('{dow} {d} de {s}, año {y}', { dow: lc(DOW[(state.day - 1) % 7]), d: state.day, s: lc(SEASONS[state.season]), y: state.year });
   const ama = (v.personal.love.length ? v.personal.love : v.gift.love).slice(0, 8);
   abrirFicha(`<div class="vcard">${face(v, 128)}<div><h2 id="ficha-t">${esc(v.name)}</h2>
-      <p>Cumpleaños: ${v.bd} de ${SEASONS[v.bs]} ${seasonIcon(v.bs, 2)}</p><p>Vive en: ${esc(v.home || '—')}</p>
-      ${partida()?.amistad?.[v.id] ? `<p>${ui('heart', 21, 18)} ${corazones(v.id)} ${corazones(v.id) === 1 ? 'corazón' : 'corazones'}</p>` : ''}</div></div>
-    <h3>Dónde está el ${esc(fecha)} <button type="button" class="btn mini" data-ir-cal="${esc(v.id)}">Cambiar día</button></h3>
-    ${v.sched.length ? `<label class="field"><span>Hora: <span id="hlabel">${hora(state.hora)}</span></span><input type="range" id="hrange" min="0" max="1200" step="10" value="${aMin(state.hora)}" aria-label="Hora del día" aria-valuetext="${hora(state.hora)}"></label>` : ''}
+      <p>${T('Cumpleaños: {d} de {s}', { d: v.bd, s: SEASONS[v.bs] })} ${seasonIcon(v.bs, 2)}</p><p>${T('Vive en: {l}', { l: esc(v.home || '—') })}</p>
+      ${partida()?.amistad?.[v.id] ? `<p>${ui('heart', 21, 18)} ${corazones(v.id)} ${corazones(v.id) === 1 ? T('corazón') : T('corazones')}</p>` : ''}</div></div>
+    <h3>${T('Dónde está el {f}', { f: esc(fecha) })} <button type="button" class="btn mini" data-ir-cal="${esc(v.id)}">${T('Cambiar día')}</button></h3>
+    ${v.sched.length ? `<label class="field"><span>${T('Hora:')} <span id="hlabel">${hora(state.hora)}</span></span><input type="range" id="hrange" min="0" max="1200" step="10" value="${aMin(state.hora)}" aria-label="${T('Hora del día')}" aria-valuetext="${hora(state.hora)}"></label>` : ''}
     <div id="hres" aria-live="polite"></div>
-    <h3>Le encanta</h3><div class="grid">${ama.map(i => slot(i)).join('')}</div>
-    <div class="row" style="margin-top:10px"><button type="button" class="btn" data-ir-aldeano="${esc(v.id)}">Ver regalos y agenda completa</button></div>`);
+    <h3>${T('Le encanta')}</h3><div class="grid">${ama.map(i => slot(i)).join('')}</div>
+    <div class="row" style="margin-top:10px"><button type="button" class="btn" data-ir-aldeano="${esc(v.id)}">${T('Ver regalos y agenda completa')}</button></div>`);
   dibujaDonde(v);
   $('#hrange', ficha)?.addEventListener('input', e => {
     state.hora = aHora(Number(e.target.value)); save();
@@ -136,38 +136,38 @@ function fichaAldeano(id) {
 function dibujaDonde(v) {
   const box = $('#hres', ficha), t = state.hora, { sch, rain } = agendaDel(v, state.season, state.day);
   const fest = festivalesDel(state.season, state.day).filter(f => !f.passive);
-  const aviso = fest.map(f => `<p class="small tag">Ese día es ${esc(f.name)}: durante el festival los aldeanos van ahí y no siguen esta agenda.</p>`).join('');
-  if (!sch) { box.innerHTML = `${aviso}<p class="donde">${esc(v.home || 'Siempre en el mismo lugar')}</p><p class="small muted">No tiene agenda de movimientos: siempre está en el mismo lugar.</p>`; return; }
+  const aviso = fest.map(f => `<p class="small tag">${T('Ese día es {f}: durante el festival los aldeanos van ahí y no siguen esta agenda.', { f: esc(f.name) })}</p>`).join('');
+  if (!sch) { box.innerHTML = `${aviso}<p class="donde">${esc(v.home || T('Siempre en el mismo lugar'))}</p><p class="small muted">${T('No tiene agenda de movimientos: siempre está en el mismo lugar.')}</p>`; return; }
   const w = dondeA(v, sch, t), H = corazones(v.id);
   let wr = rain && rain !== sch ? dondeA(v, rain, t) : null;
   if (wr && wr.loc === w.loc) wr = null;  // con lluvia estaría en el mismo lugar
   const casa = !w.loc || w.loc === v.home;
-  const cuando = w.desde == null ? 'Todavía no salió de su casa.' : w.bed ? `A las ${hora(w.desde)} se fue a dormir.` : casa ? `Desde las ${hora(w.desde)} está en su casa o volviendo.` : `A las ${hora(w.desde)} salió hacia ahí; puede estar todavía en camino.`;
-  box.innerHTML = `${aviso}<p class="donde">${esc(w.loc || 'En su casa')}</p><p class="small muted">${cuando}</p>
-    ${wr ? `<p class="small">Si llueve: ${esc(wr.loc || 'en su casa')}${wr.desde != null ? ` (desde las ${hora(wr.desde)})` : ''}</p>` : ''}
-    <details><summary class="small muted">Agenda de ese día (${esc(sch.label)})</summary><div class="tline small" style="margin-top:6px">${sch.rows.map(r => { const now = r.t === w.desde ? ' class="now"' : ''; return `<span${now}>${hora(r.t)}</span><span${now}>${esc(r.loc || '—')}${r.bed ? ' (a dormir)' : ''}</span>`; }).join('')}</div></details>
-    <p class="small muted">Elegida como lo hace el juego: por fecha, día de la semana${H ? ` y tus ${H} corazones` : ''}. Los eventos y las misiones pueden cambiarla.</p>`;
+  const cuando = w.desde == null ? T('Todavía no salió de su casa.') : T(w.bed ? 'A las {h} se fue a dormir.' : casa ? 'Desde las {h} está en su casa o volviendo.' : 'A las {h} salió hacia ahí; puede estar todavía en camino.', { h: hora(w.desde) });
+  box.innerHTML = `${aviso}<p class="donde">${esc(w.loc || T('En su casa'))}</p><p class="small muted">${cuando}</p>
+    ${wr ? `<p class="small">${T('Si llueve: {l}', { l: esc(wr.loc || T('en su casa')) })}${wr.desde != null ? T(' (desde las {h})', { h: hora(wr.desde) }) : ''}</p>` : ''}
+    <details><summary class="small muted">${T('Agenda de ese día ({l})', { l: esc(sch.label) })}</summary><div class="tline small" style="margin-top:6px">${sch.rows.map(r => { const now = r.t === w.desde ? ' class="now"' : ''; return `<span${now}>${hora(r.t)}</span><span${now}>${esc(r.loc || '—')}${r.bed ? T(' (a dormir)') : ''}</span>`; }).join('')}</div></details>
+    <p class="small muted">${T('Elegida como lo hace el juego: por fecha, día de la semana{h}. Los eventos y las misiones pueden cambiarla.', { h: H ? T(' y tus {n} corazones', { n: H }) : '' })}</p>`;
 }
 
 // ---------- ficha de objeto
 function usaIngrediente(r, id, o) { return r.ing.some(([i]) => i === id || (i === '-777' ? WILD_SEEDS.includes(id) : /^-\d+$/.test(i) && Number(i) === o.c)); }
-const GUSTO = [['love', 'Le encanta a'], ['like', 'Le gusta a'], ['dislike', 'No le gusta a'], ['hate', 'Lo odia']];
+const GUSTO = [['love', T('Le encanta a')], ['like', T('Le gusta a')], ['dislike', T('No le gusta a')], ['hate', T('Lo odia')]];
 const caras = vs => `<div class="grid">${vs.map(v => `<button type="button" class="slot" data-ficha-npc="${esc(v.id)}" data-tip="t:${esc(v.name)}" aria-label="${esc(v.name)}">${face(v, 48)}</button>`).join('')}</div>`;
 const conCalidad = c => [-75, -79, -80, -81, -4, -5, -6, -18, -14].includes(c);
 // Lo que muestra el juego al pasar el mouse por un arma o un calzado; lo demás, tal como viene en Data/Weapons.
 function stats(o) {
   const l = [];
   if (o.k === 'W' && o.wt !== 4) {
-    l.push(`Daño ${o.dmg[0]}-${o.dmg[1]}`);
+    l.push(T('Daño {a}-{b}', { a: o.dmg[0], b: o.dmg[1] }));
     const v = o.wt === 2 ? o.spd + 8 : o.spd;
-    if (o.spd !== (o.wt === 2 ? -8 : 0)) l.push(`Velocidad ${v > 0 ? '+' : ''}${Math.trunc(v / 2)}`);
-    if (o.df) l.push(`Defensa +${o.df}`); if (o.pr) l.push(`Precisión +${o.pr}`); if (o.aoe) l.push(`Alcance +${o.aoe}`);
-    l.push(`Probabilidad de golpe crítico: ${String(Math.round(o.cc * 1000) / 10).replace('.', ',')} %`, `Daño crítico: ×${String(o.cm).replace('.', ',')}`, `Empuje: ${String(o.kb).replace('.', ',')}`);
+    if (o.spd !== (o.wt === 2 ? -8 : 0)) l.push(T('Velocidad {v}', { v: `${v > 0 ? '+' : ''}${Math.trunc(v / 2)}` }));
+    if (o.df) l.push(T('Defensa +{n}', { n: o.df })); if (o.pr) l.push(T('Precisión +{n}', { n: o.pr })); if (o.aoe) l.push(T('Alcance +{n}', { n: o.aoe }));
+    l.push(T('Probabilidad de golpe crítico: {n} %', { n: dec(Math.round(o.cc * 1000) / 10) }), T('Daño crítico: ×{n}', { n: dec(o.cm) }), T('Empuje: {n}', { n: dec(o.kb) }));
   }
-  if (o.k === 'B') l.push(`Defensa +${o.df}`, `Inmunidad +${o.im}`);
-  if (o.dye) l.push('Se puede teñir.');
-  if (o.forja) l.push(`Se puede reforjar en el ${esc(D.names.anvil)}.`);
-  return l.length ? `<h3>Características</h3>${l.map(x => `<p class="small">${x}</p>`).join('')}` : '';
+  if (o.k === 'B') l.push(T('Defensa +{n}', { n: o.df }), T('Inmunidad +{n}', { n: o.im }));
+  if (o.dye) l.push(T('Se puede teñir.'));
+  if (o.forja) l.push(T('Se puede reforjar en el {a}.', { a: esc(D.names.anvil) }));
+  return l.length ? `<h3>${T('Características')}</h3>${l.map(x => `<p class="small">${x}</p>`).join('')}` : '';
 }
 // Ficha de cualquier ítem: arriba lo que es, después de dónde sale, para qué sirve y a quién regalarlo.
 function fichaHtml(id, enPanel) {
@@ -181,19 +181,19 @@ function fichaHtml(id, enPanel) {
   const gustos = esO ? GUSTO.map(([k, t]) => [t, D.villagers.filter(v => v.gift[k].includes(id))]).filter(([, vs]) => vs.length) : [];
   const q = esO && o.p > 0 && conCalidad(o.c);
   return `<div class="item-row"><span class="slot">${itemSpr(id, 3)}</span><div><h2${enPanel ? '' : ' id="ficha-t"'} style="margin:0">${esc(o.n)}</h2>
-      <span class="small muted">${esc(o.g || o.cn || 'Objeto')}${esO && o.p > 0 ? ` · se vende a ${gold(o.p)}` : ''}${hay ? ` · tenés ${tengo(id)}` : ''}</span></div></div>
+      <span class="small muted">${esc(o.g || o.cn || T('Objeto'))}${esO && o.p > 0 ? T(' · se vende a {g}', { g: gold(o.p) }) : ''}${hay ? T(' · tenés {n}', { n: tengo(id) }) : ''}</span></div></div>
     ${o.d ? `<p>${esc(o.d)}</p>` : ''}
-    ${q ? `<p class="small row">Con calidad: ${[1, 2, 3].map(k => `<span class="gold">${ui(['', 'qs', 'qg', 'qi'][k], 16, 16)}${num(Math.floor(o.p * Calc.QUALITY[k]))}</span>`).join('')}</p>` : ''}
-    ${comer != null ? `<p class="small">Comerlo: energía ${comer > 0 ? '+' : ''}${comer}${comer > 0 ? `, salud +${Math.floor(comer * 0.45)}` : ''} (calidad normal).</p>` : ''}
-    ${o.bf ? `<p class="small">Efecto: ${o.bf.map(buffText).map(esc).join('; ')}</p>` : ''}
+    ${q ? `<p class="small row">${T('Con calidad:')} ${[1, 2, 3].map(k => `<span class="gold">${ui(['', 'qs', 'qg', 'qi'][k], 16, 16)}${num(Math.floor(o.p * Calc.QUALITY[k]))}</span>`).join('')}</p>` : ''}
+    ${comer != null ? `<p class="small">${T('Comerlo: energía {e}{s} (calidad normal).', { e: `${comer > 0 ? '+' : ''}${comer}`, s: comer > 0 ? T(', salud +{n}', { n: Math.floor(comer * 0.45) }) : '' })}</p>` : ''}
+    ${o.bf ? `<p class="small">${T('Efecto: {l}', { l: o.bf.map(buffText).map(esc).join('; ') })}</p>` : ''}
     ${stats(o)}
-    ${o.mu ? '<p class="small">Se puede donar al museo.</p>' : ''}
-    <h3>Cómo conseguirlo</h3>${howTo(id).map(x => `<p class="small">${x}</p>`).join('')}
-    ${rec ? `<p class="small">${sabida(rec) === false ? 'Todavía no sabés la receta.' : sabida(rec) ? 'Ya sabés la receta.' : ''} <button type="button" class="btn mini" data-ir-receta="${esc(rec.key)}">Ver la receta</button></p>` : ''}
-    ${usos.length ? `<h3>Se usa en</h3><div class="grid">${usos.map(r => `<button type="button" class="slot" data-ir-receta="${esc(r.key)}" data-tip="t:${esc(r.name)}" aria-label="${esc(r.name)}">${recSpr(r, 3)}</button>`).join('')}</div>` : ''}
-    ${lotes ? `<h3>Centro Cívico</h3><p class="small">${esc(lotes.join(', '))}</p>` : ''}
+    ${o.mu ? `<p class="small">${T('Se puede donar al museo.')}</p>` : ''}
+    <h3>${T('Cómo conseguirlo')}</h3>${howTo(id).map(x => `<p class="small">${x}</p>`).join('')}
+    ${rec ? `<p class="small">${sabida(rec) === false ? T('Todavía no sabés la receta.') : sabida(rec) ? T('Ya sabés la receta.') : ''} <button type="button" class="btn mini" data-ir-receta="${esc(rec.key)}">${T('Ver la receta')}</button></p>` : ''}
+    ${usos.length ? `<h3>${T('Se usa en')}</h3><div class="grid">${usos.map(r => `<button type="button" class="slot" data-ir-receta="${esc(r.key)}" data-tip="t:${esc(r.name)}" aria-label="${esc(r.name)}">${recSpr(r, 3)}</button>`).join('')}</div>` : ''}
+    ${lotes ? `<h3>${T('Centro Cívico')}</h3><p class="small">${esc(lotes.join(', '))}</p>` : ''}
     ${gustos.map(([t, vs]) => `<h3>${t}</h3>${caras(vs)}`).join('')}
-    ${fish || crop || art || maq ? `<div class="row" style="margin-top:10px">${fish ? `<button type="button" class="btn" data-ir-pez="${esc(id)}">Ver en Peces</button>` : ''}${crop ? `<button type="button" class="btn" data-ir-cultivo="${esc(crop.id)}">Ver en Cultivos</button>` : ''}${art ? `<button type="button" class="btn" data-ir-art="${esc(id)}">Qué hacer con esto</button>` : ''}${maq ? `<button type="button" class="btn" data-ir-maq="${esc(maq.id)}">Ver en Artesanales</button>` : ''}</div>` : ''}`;
+    ${fish || crop || art || maq ? `<div class="row" style="margin-top:10px">${fish ? `<button type="button" class="btn" data-ir-pez="${esc(id)}">${T('Ver en Peces')}</button>` : ''}${crop ? `<button type="button" class="btn" data-ir-cultivo="${esc(crop.id)}">${T('Ver en Cultivos')}</button>` : ''}${art ? `<button type="button" class="btn" data-ir-art="${esc(id)}">${T('Qué hacer con esto')}</button>` : ''}${maq ? `<button type="button" class="btn" data-ir-maq="${esc(maq.id)}">${T('Ver en Artesanales')}</button>` : ''}</div>` : ''}`;
 }
 function fichaObjeto(id) { if (obj(id)) abrirFicha(fichaHtml(id)); }
 
@@ -208,7 +208,7 @@ function fichaCategoria(cat) {
   const vistos = new Set();
   const ids = (cat === '-777' ? WILD_SEEDS : Object.keys(D.objects).filter(k => String(D.objects[k].c) === cat)).filter(k => { const o = obj(k); if (!o || o.p <= 0 || vistos.has(o.n)) return false; vistos.add(o.n); return true; });
   const hay = !!partida()?.inventario;
-  abrirFicha(`<div class="item-row"><span class="slot">${ingSpr(cat, 3)}</span><div><h2 id="ficha-t" style="margin:0">${esc(ingName(cat))}</h2>${hay ? `<span class="small muted">Tenés ${tengo(cat)} en total</span>` : ''}</div></div>
-    <p>Sirve cualquiera de estos. Tocá uno para ver cómo conseguirlo.</p>
+  abrirFicha(`<div class="item-row"><span class="slot">${ingSpr(cat, 3)}</span><div><h2 id="ficha-t" style="margin:0">${esc(ingName(cat))}</h2>${hay ? `<span class="small muted">${T('Tenés {n} en total', { n: tengo(cat) })}</span>` : ''}</div></div>
+    <p>${T('Sirve cualquiera de estos. Tocá uno para ver cómo conseguirlo.')}</p>
     <div class="grid">${ids.map(i => slot(i, { n: hay ? tengo(i) : 0 })).join('')}</div>`);
 }

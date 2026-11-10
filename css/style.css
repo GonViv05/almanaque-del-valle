@@ -209,3 +209,16 @@ span.slot { cursor: default; }
 .opc .n { text-align: right; white-space: nowrap; }
 @media (max-width: 640px) { .art-tabla .nom { display: none; } .art-tabla th.n { white-space: normal; } }
 @media (max-width: 1080px) { #opanel { display: none; } }
+/* Cabecera: idioma (ES/EN) y redes del autor, casi transparentes hasta pasar el mouse. */
+#marca { display: flex; flex-direction: column; gap: 8px; flex: none; }
+#redes { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; }
+#redes .idioma { display: flex; gap: 4px; }
+#redes .idioma .btn { min-width: 54px; justify-content: center; }
+#redes .social { display: flex; align-items: center; gap: 6px; opacity: .4; transition: opacity .15s; font: var(--small)/1 SDVSmall; color: var(--peach2); text-shadow: 2px 2px 0 var(--wood); }
+#redes .social:hover, #redes .social:focus-within { opacity: 1; }
+#redes .social a { display: block; line-height: 0; }
+#redes .social svg { filter: drop-shadow(2px 2px 0 var(--ink2)); }
+#redes .social .ui { margin-right: 2px; vertical-align: -2px; }
+#redes .aviso-idioma { flex-basis: 100%; max-width: 420px; margin: 0; font-size: var(--small); color: var(--peach2); text-shadow: 2px 2px 0 var(--wood); }
+.datos-en .note { background-image: url(../assets/sheets/junimo.en.png); }
+.datos-en .board { background-image: url(../assets/ui/calendario.en.png); }

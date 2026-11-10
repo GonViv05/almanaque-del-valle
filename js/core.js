@@ -10,15 +10,18 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } ca
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const num = n => Math.round(n).toLocaleString('es-ES');
+const num = n => Math.round(n).toLocaleString(LANG === 'en' ? 'en-US' : 'es-ES');
 const SEASONS = D.seasons;
-const DOW = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const DOW = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => T(d));
 const SHEETS = { o: [384, 624], o2: [128, 320], crops: [256, 1024], big: [128, 1472], junimo: [640, 308], trees: [432, 720] };
 Object.assign(SHEETS, D.sheets);  // armas, herramientas, sombreros, muebles y ropa (pestaña Objetos)
+// La nota de los Junimos trae texto: con los datos en inglés se usa la hoja en inglés.
+const hojaArchivo = s => s === 'junimo' && D.meta?.lang === 'en' ? 'junimo.en' : s;
+document.body.classList.toggle('datos-en', D.meta?.lang === 'en');
 
 function spr(sheet, x, y, w, h, scale) {
   const [W, H] = SHEETS[sheet];
-  return `<i class="spr" style="width:${w * scale}px;height:${h * scale}px;background-image:url(assets/sheets/${sheet}.png);background-position:-${x * scale}px -${y * scale}px;background-size:${W * scale}px ${H * scale}px"></i>`;
+  return `<i class="spr" style="width:${w * scale}px;height:${h * scale}px;background-image:url(assets/sheets/${hojaArchivo(sheet)}.png);background-position:-${x * scale}px -${y * scale}px;background-size:${W * scale}px ${H * scale}px"></i>`;
 }
 // Objetos comunes por id ("24") y el resto de los ítems por id calificado ("(W)4", "(F)1226"...).
 const obj = id => D.objects[id] || D.items?.[id];
@@ -40,11 +43,12 @@ function slot(id, o = {}) {
   const cls = ['slot', o.sel && 'sel', o.done && 'done', o.dim && 'dim'].filter(Boolean).join(' ');
   return `<button type="button" class="${cls}" data-tip="o:${esc(id)}" data-id="${esc(id)}"${o.act ? ` data-act="${o.act}"` : ''} aria-label="${esc(obj(id)?.n || id)}">${itemSpr(id, 3)}${qStar(o.q)}${o.n > 1 ? digitos(o.n) : ''}</button>`;
 }
-const MUSEO_T = { Arch: 'artefactos', Minerals: 'minerales' };
-const condText = cs => [...new Set((cs || []).map(c => c.year ? `desde el año ${c.year}` : c.year1 ? 'solo el primer año' : c.season ? `solo en ${seasonNames(c.season).toLowerCase()}` : c.dow ? `solo ${c.dow.map(d => ({ Monday: 'lunes', Tuesday: 'martes', Wednesday: 'miércoles', Thursday: 'jueves', Friday: 'viernes', Saturday: 'sábados', Sunday: 'domingos' }[d] || d)).join(', ')}`
-  : c.dom ? `solo ${c.dom.map(d => d === 'even' ? 'los días pares' : d === 'odd' ? 'los días impares' : `el día ${d}`).join(', ')}` : c.mine ? `después de llegar al nivel ${c.mine} de la mina` : c.ach ? (c.ach === '*' ? 'con todos los logros' : `con el logro «${esc(c.ach)}»`)
-  : c.house ? `con la casa ampliada ${c.house === 1 ? 'una vez' : `${c.house} veces`}` : c.museum ? `después de donar ${c.museum} ${c.types?.length ? c.types.map(t => MUSEO_T[t] || t).join(' y ') : 'objetos'} al museo` : c.skill ? `con nivel ${c.skill[1]} de ${esc(c.skill[0])}`
-  : c.hearts ? `con ${c.hearts[1]} corazones con ${esc(c.hearts[0])}` : c.tras ? `después de conseguir la ${esc(c.tras)}` : c.days ? `después de ${c.days} días de juego` : c.quest ? 'misión de Qi' : 'con condición especial'))].join(', ');
+const MUSEO_T = { Arch: T('artefactos'), Minerals: T('minerales') };
+const DOW_PL = { Monday: 'lunes§pl', Tuesday: 'martes§pl', Wednesday: 'miércoles§pl', Thursday: 'jueves§pl', Friday: 'viernes§pl', Saturday: 'sábados', Sunday: 'domingos' };
+const condText = cs => [...new Set((cs || []).map(c => c.year ? T('desde el año {y}', { y: c.year }) : c.year1 ? T('solo el primer año') : c.season ? T('solo en {s}', { s: lc(seasonNames(c.season)) }) : c.dow ? T('solo {d}', { d: c.dow.map(d => DOW_PL[d] ? T(DOW_PL[d]) : d).join(', ') })
+  : c.dom ? T('solo {d}', { d: c.dom.map(d => d === 'even' ? T('los días pares') : d === 'odd' ? T('los días impares') : T('el día {d}', { d })).join(', ') }) : c.mine ? T('después de llegar al nivel {n} de la mina', { n: c.mine }) : c.ach ? (c.ach === '*' ? T('con todos los logros') : T('con el logro {a}', { a: comillas(esc(c.ach)) }))
+  : c.house ? (c.house === 1 ? T('con la casa ampliada una vez') : T('con la casa ampliada {n} veces', { n: c.house })) : c.museum ? T('después de donar {n} {t} al museo', { n: c.museum, t: c.types?.length ? c.types.map(t => MUSEO_T[t] || t).join(T(' y ')) : T('objetos') }) : c.skill ? T('con nivel {n} de {s}', { n: c.skill[1], s: esc(c.skill[0]) })
+  : c.hearts ? T('con {n} corazones con {p}', { n: c.hearts[1], p: esc(c.hearts[0]) }) : c.tras ? T('después de conseguir la {x}', { x: esc(c.tras) }) : c.days ? T('después de {n} días de juego', { n: c.days }) : c.quest ? T('misión de Qi') : T('con condición especial')))].join(', ');
 function seasonNames(list) { return (list || []).map(s => SEASONS[s]).join(', '); }
 
 // ---------- texto de "cómo conseguirlo", siempre desde los datos del juego
@@ -56,45 +60,47 @@ function fishIn(f, n, loc = 'all') {
   const z = loc !== 'all' ? all.filter(w => w.loc === loc) : all.filter(w => !w.quest && (!w.isl || islaOk()));
   return z.length ? z.some(w => w.ss.includes(n)) : f.seasons.includes(n);
 }
-const zoneSeasons = ss => ss.length === 4 ? 'todo el año' : seasonNames(ss);
+const zoneSeasons = ss => ss.length === 4 ? T('todo el año') : seasonNames(ss);
 function fishWhere(f) {
   if (!f.where?.length) return [];
   const g = new Map();
   for (const w of f.where) { if (w.quest) continue; const k = w.loc + (w.area ? ` (${w.area})` : ''); if (!g.has(k)) g.set(k, new Set()); w.ss.forEach(x => g.get(k).add(x)); }
-  return [...g].map(([k, s]) => `${k}: ${zoneSeasons([...s].sort()).toLowerCase()}`);
+  return [...g].map(([k, s]) => `${k}: ${lc(zoneSeasons([...s].sort()))}`);
 }
-function hourRange(t) { const f = x => { let h = Math.floor(x / 100); return `${h >= 24 ? h - 24 : h}:${String(x % 100).padStart(2, '0')}`; }; return t.map(([a, b]) => `${f(a)} a ${f(b)}`).join(' y '); }
-const WEATHER = { both: 'Cualquiera', sunny: 'Soleado', rainy: 'Lluvia' };
+function hourRange(t) { const f = x => { let h = Math.floor(x / 100); return `${h >= 24 ? h - 24 : h}:${String(x % 100).padStart(2, '0')}`; }; return t.map(([a, b]) => T('{a} a {b}', { a: f(a), b: f(b) })).join(T(' y ')); }
+const WEATHER = { both: T('Cualquiera'), sunny: T('Soleado'), rainy: T('Lluvia') };
 function howTo(id) {
   const s = D.sources[id] || D.qsources?.[id] || {}, out = [], N = D.names || {};
-  if (s.crop) { const c = D.crops.find(x => x.id === s.crop.seed); const b = bestShop(c.sources); out.push(`Cultivo de ${seasonNames(s.crop.seasons)}. Semilla: ${c.seed}${b ? ` (${num(b.price)} o en ${b.shop})` : ''}.`); }
-  if (s.tree) { const t = D.trees.find(x => x.id === s.tree.id); out.push(`Árbol frutal (${t.sapling}), da fruta en ${seasonNames(s.tree.seasons)}.`); }
-  if (s.fish) { const f = D.fish.find(x => x.id === id); if (f.trap) out.push(`Nasa en ${f.water === 'ocean' ? 'mar' : 'agua dulce'}.`); else out.push(`Pesca en ${fishWhere(f).join('; ') || 'sin zona registrada'}. De ${hourRange(f.times)}, clima: ${WEATHER[f.weather].toLowerCase()}.`); }
-  if (s.forage) { const m = new Map(); for (const [l, se] of s.forage) { if (!m.has(l)) m.set(l, new Set()); m.get(l).add(se); } out.push('Recolección: ' + [...m].map(([l, ss]) => `${l}${[...ss].some(x => x != null) ? ' (' + [...ss].filter(x => x != null).map(x => SEASONS[x]).join(', ') + ')' : ''}`).join('; ') + '.'); }
-  if (s.animal) out.push(`Producto de: ${s.animal.join(', ')}.`);
-  if (s.tap) out.push(s.tap.map(t => `${D.tapper} en un árbol de ${obj(t.seed).n} (cada ${t.days} ${t.days === 1 ? 'día' : 'días'}${t.noWinter ? ', menos en invierno' : ''})`).join('. ') + '.');
-  if (s.mach) out.push(s.mach.map(m => `Se hace en ${m.m}${m.inp.length ? ` con ${m.inp.map(i => obj(i).n).join(' o ')}` : ''}`).join('. ') + '.');
-  if (s.mon) out.push(`Botín de: ${s.mon.join(', ')}.`);
-  if (s.geo) out.push(`Dentro de: ${s.geo.join(', ')}.`);
-  if (s.shop) { const l = s.shop.filter(x => x.price != null || x.trade).map(x => { const c = condText(x.cond); return `${x.shop}${x.price != null ? ` (${num(x.price)} ${MONEDA[x.currency] || 'o'}${c ? `, ${c}` : ''})` : x.trade ? ` (${x.trade[1]} × ${obj(x.trade[0])?.n || x.trade[0]}${c ? `, ${c}` : ''})` : ''}`; }); if (l.length) out.push(`Se compra en: ${[...new Set(l)].join('; ')}.`); }
-  if (s.rot) { const m = new Map(); for (const r of s.rot) { const c = condText(r.cond); if (!m.has(r.shop)) m.set(r.shop, new Set()); m.get(r.shop).add(c); } out.push(`Puede salir entre los muebles que rotan en: ${[...m].map(([k, cs]) => cs.has('') ? k : `${k} (${[...cs].join('; ')})`).join(', ')}.`); }
-  if (s.catal) out.push(`Gratis en el ${s.catal.join(' o en el ')}.`);
-  if (s.slayer) out.push(`Recompensa del ${esc(N.adv)} por eliminar ${num(s.slayer.n)} ${esc(s.slayer.name)}${s.slayer.price > 0 ? `; después se compra ahí por ${num(s.slayer.price)} o` : ''}.`);
-  if (s.museum) out.push(s.museum.map(m => `Recompensa del museo al donar ${m.map(x => typeof x === 'string' ? obj(x)?.n || x : x.t === 'any' ? `${x.n} objetos en total` : `${x.n} ${x.t === 'arch' ? 'artefactos' : 'minerales'}`).join(', ')}.`).join(' '));
-  if (s.mail) out.push(`Llega por carta: ${s.mail.map(t => t ? `«${esc(t)}»` : 'sin título').join(', ')}.`);
-  if (s.dig) out.push(`Puntos de excavación en: ${s.dig.join(', ')}.`);
-  if (s.sew) { const fem = e => e.fem === 1 ? ', si tu personaje es mujer' : e.fem === 0 ? ', si tu personaje es hombre' : '', igual = s.sew.every(e => e.fem === s.sew[0].fem);
-    out.push(`Se cose en la ${esc(N.sew)} con ${s.sew.map(e => `${e.base ? e.base.map(i => obj(i)?.n).join(' o ') : 'tela'} + ${e.cat ? `cualquier ${e.cat.toLowerCase()}` : e.ids.map(i => obj(i)?.n).join(' o ') + (e.mas ? ` (y ${e.mas} más)` : '')}${e.azar ? ', sale una prenda al azar' : ''}${igual ? '' : fem(e)}`).join('; ')}${igual ? fem(s.sew[0]) : ''}.`); }
-  if (s.upg) out.push(`Mejora en la ${esc(N.smith)}${s.upg.de ? ` desde ${obj(s.upg.de)?.n || s.upg.de}` : ''}: ${num(s.upg.price)} o${s.upg.trade ? ` y ${s.upg.trade[1]} × ${obj(s.upg.trade[0])?.n}` : ''}.${s.upg.note ? ` <span class="manual">${esc(s.upg.note)} (nota manual)</span>` : ''}`);
-  if (s.azar) out.push('Puede salir al azar, por ejemplo en los cofres del tesoro de las minas.');
-  if (s.custom) out.push('Se puede elegir al crear el personaje.');
+  const O = T(' o ');
+  if (s.crop) { const c = D.crops.find(x => x.id === s.crop.seed); const b = bestShop(c.sources); out.push(T('Cultivo de {s}. Semilla: {seed}{b}.', { s: seasonNames(s.crop.seasons), seed: c.seed, b: b ? T(' ({p} o en {shop})', { p: num(b.price), shop: b.shop }) : '' })); }
+  if (s.tree) { const t = D.trees.find(x => x.id === s.tree.id); out.push(T('Árbol frutal ({sap}), da fruta en {s}.', { sap: t.sapling, s: seasonNames(s.tree.seasons) })); }
+  if (s.fish) { const f = D.fish.find(x => x.id === id); if (f.trap) out.push(T('Nasa en {w}.', { w: f.water === 'ocean' ? T('mar') : T('agua dulce') })); else out.push(T('Pesca en {z}. De {h}, clima: {w}.', { z: fishWhere(f).join('; ') || T('sin zona registrada'), h: hourRange(f.times), w: WEATHER[f.weather].toLowerCase() })); }
+  if (s.forage) { const m = new Map(); for (const [l, se] of s.forage) { if (!m.has(l)) m.set(l, new Set()); m.get(l).add(se); } out.push(T('Recolección: {l}.', { l: [...m].map(([l, ss]) => `${l}${[...ss].some(x => x != null) ? ' (' + [...ss].filter(x => x != null).map(x => SEASONS[x]).join(', ') + ')' : ''}`).join('; ') })); }
+  if (s.animal) out.push(T('Producto de: {l}.', { l: s.animal.join(', ') }));
+  if (s.tap) out.push(s.tap.map(t => T('{tap} en un árbol de {seed} (cada {n} {d}{w})', { tap: D.tapper, seed: obj(t.seed).n, n: t.days, d: t.days === 1 ? T('día') : T('días'), w: t.noWinter ? T(', menos en invierno') : '' })).join('. ') + '.');
+  if (s.mach) out.push(s.mach.map(m => T('Se hace en {m}{i}', { m: m.m, i: m.inp.length ? T(' con {l}', { l: m.inp.map(i => obj(i).n).join(O) }) : '' })).join('. ') + '.');
+  if (s.mon) out.push(T('Botín de: {l}.', { l: s.mon.join(', ') }));
+  if (s.geo) out.push(T('Dentro de: {l}.', { l: s.geo.join(', ') }));
+  if (s.shop) { const l = s.shop.filter(x => x.price != null || x.trade).map(x => { const c = condText(x.cond); return `${x.shop}${x.price != null ? ` (${num(x.price)} ${MONEDA[x.currency] || T('o')}${c ? `, ${c}` : ''})` : x.trade ? ` (${x.trade[1]} × ${obj(x.trade[0])?.n || x.trade[0]}${c ? `, ${c}` : ''})` : ''}`; }); if (l.length) out.push(T('Se compra en: {l}.', { l: [...new Set(l)].join('; ') })); }
+  if (s.rot) { const m = new Map(); for (const r of s.rot) { const c = condText(r.cond); if (!m.has(r.shop)) m.set(r.shop, new Set()); m.get(r.shop).add(c); } out.push(T('Puede salir entre los muebles que rotan en: {l}.', { l: [...m].map(([k, cs]) => cs.has('') ? k : `${k} (${[...cs].join('; ')})`).join(', ') })); }
+  if (s.catal) out.push(T('Gratis en el {l}.', { l: s.catal.join(T(' o en el ')) }));
+  if (s.slayer) out.push(T('Recompensa del {g} por eliminar {n} {m}{p}.', { g: esc(N.adv), n: num(s.slayer.n), m: esc(s.slayer.name), p: s.slayer.price > 0 ? T('; después se compra ahí por {p} o', { p: num(s.slayer.price) }) : '' }));
+  if (s.museum) out.push(s.museum.map(m => T('Recompensa del museo al donar {l}.', { l: m.map(x => typeof x === 'string' ? obj(x)?.n || x : x.t === 'any' ? T('{n} objetos en total', { n: x.n }) : T(x.t === 'arch' ? '{n} artefactos' : '{n} minerales', { n: x.n })).join(', ') })).join(' '));
+  if (s.mail) out.push(T('Llega por carta: {l}.', { l: s.mail.map(t => t ? comillas(esc(t)) : T('sin título')).join(', ') }));
+  if (s.dig) out.push(T('Puntos de excavación en: {l}.', { l: s.dig.join(', ') }));
+  if (s.sew) { const fem = e => e.fem === 1 ? T(', si tu personaje es mujer') : e.fem === 0 ? T(', si tu personaje es hombre') : '', igual = s.sew.every(e => e.fem === s.sew[0].fem);
+    out.push(T('Se cose en la {m} con {l}.', { m: esc(N.sew), l: s.sew.map(e => `${e.base ? e.base.map(i => obj(i)?.n).join(O) : T('tela')} + ${e.cat ? T('cualquier {c}', { c: e.cat.toLowerCase() }) : e.ids.map(i => obj(i)?.n).join(O) + (e.mas ? T(' (y {n} más)', { n: e.mas }) : '')}${e.azar ? T(', sale una prenda al azar') : ''}${igual ? '' : fem(e)}`).join('; ') + (igual ? fem(s.sew[0]) : '') })); }
+  if (s.upg) out.push(T('Mejora en la {s}{d}: {p}{t}.', { s: esc(N.smith), d: s.upg.de ? T(' desde {x}', { x: obj(s.upg.de)?.n || s.upg.de }) : '', p: `${num(s.upg.price)} ${T('o')}`, t: s.upg.trade ? T(' y {n} × {x}', { n: s.upg.trade[1], x: obj(s.upg.trade[0])?.n }) : '' }) + (s.upg.note ? ` <span class="manual">${esc(s.upg.note)} ${T('(nota manual)')}</span>` : ''));
+  if (s.azar) out.push(T('Puede salir al azar, por ejemplo en los cofres del tesoro de las minas.'));
+  if (s.custom) out.push(T('Se puede elegir al crear el personaje.'));
   const rb = !s.craft && id.startsWith('(BC)') && D.recipes.find(r => r.big && '(BC)' + r.id === id);
-  if (rb) out.push(`Fabricación: ${rb.ing.map(([i, n]) => `${n} × ${D.catnames[i] || obj(i)?.n || i}`).join(', ')}.`);
-  if (s.craft) out.push(`${s.craft.cook ? 'Receta de cocina' : 'Fabricación'}: ${s.craft.ing.map(([i, n]) => `${n} × ${i.startsWith('-') ? 'cualquiera de la categoría' : (obj(i)?.n || i)}`).join(', ')}.`);
-  if (s.note) out.push(`<span class="manual">${esc(s.note)} (nota manual: no viene en los datos del juego)</span>`);
-  return out.length ? out : ['El juego no registra de dónde sale este objeto.'];
+  if (rb) out.push(T('Fabricación: {l}.', { l: rb.ing.map(([i, n]) => `${n} × ${D.catnames[i] || obj(i)?.n || i}`).join(', ') }));
+  if (s.craft) out.push(T(s.craft.cook ? 'Receta de cocina: {l}.' : 'Fabricación: {l}.', { l: s.craft.ing.map(([i, n]) => `${n} × ${i.startsWith('-') ? T('cualquiera de la categoría') : (obj(i)?.n || i)}`).join(', ') }));
+  if (s.note) out.push(notaManual(s.note));
+  return out.length ? out : [T('El juego no registra de dónde sale este objeto.')];
 }
-const MONEDA = { 1: 'estrellas', 2: 'monedas de Qi', 4: 'gemas de Qi' };
+const notaManual = t => `<span class="manual">${esc(t)} ${T('(nota manual: no viene en los datos del juego)')}</span>`;
+const MONEDA = { 1: T('estrellas'), 2: T('monedas de Qi'), 4: T('gemas de Qi') };
 const bundleUse = (() => { const m = {}; for (const r of D.rooms) for (const b of r.bundles) for (const i of b.items) if (i.id) (m[i.id] ||= []).push(`${b.name} (${r.name})`); return m; })();
 const lovers = id => D.villagers.filter(v => v.gift.love.includes(id));
 
@@ -106,7 +112,7 @@ function tipHtml(spec) {
   if (k === 'o') {
     const o = obj(v); if (!o) return '';
     const prices = esObjeto(v) && o.p > 0 ? `<hr><div class="row">${gold(o.p)}${(o.c === -75 || o.c === -79 || o.c === -80 || o.c === -4 || o.c === -5 || o.c === -6 || o.c === -18 || o.c === -14 || o.c === -81) ? [1, 2, 3].map(q => `<span class="gold">${ui(['', 'qs', 'qg', 'qi'][q], 16, 16)}${num(Math.floor(o.p * Calc.QUALITY[q]))}</span>`).join('') : ''}</div>` : '';
-    const bu = bundleUse[v] ? `<p class="muted">Lote: ${esc(bundleUse[v].join(', '))}</p>` : '';
+    const bu = bundleUse[v] ? `<p class="muted">${T('Lote: {l}', { l: esc(bundleUse[v].join(', ')) })}</p>` : '';
     return `<div class="t">${esc(o.n)}</div><p class="muted">${esc(o.g || o.cn)}</p>${o.d ? `<p>${esc(o.d)}</p>` : ''}${prices}${bu}`;
   }
   return '';
@@ -148,7 +154,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowDown') { e.preventDefault(); li.nextElementSibling?.focus(); }
   if (e.key === 'ArrowUp') { e.preventDefault(); li.previousElementSibling?.focus(); }
 });
-const seasonBar = (id, val, withAll) => `<div class="row" role="group" aria-label="Estación">${withAll ? `<button type="button" class="btn" data-${id}="all" aria-pressed="${val === 'all'}">Todas</button>` : ''}${SEASONS.map((n, i) => `<button type="button" class="btn" data-${id}="${i}" aria-pressed="${String(val) === String(i)}" data-tip="t:${n}" aria-label="${n}">${seasonIcon(i)}</button>`).join('')}</div>`;
+const seasonBar = (id, val, withAll) => `<div class="row" role="group" aria-label="${T('Estación')}">${withAll ? `<button type="button" class="btn" data-${id}="all" aria-pressed="${val === 'all'}">${T('Todas')}</button>` : ''}${SEASONS.map((n, i) => `<button type="button" class="btn" data-${id}="${i}" aria-pressed="${String(val) === String(i)}" data-tip="t:${n}" aria-label="${n}">${seasonIcon(i)}</button>`).join('')}</div>`;
 const TABS = {};
 
 // ---------- partida real: la escribe tools/vigia.py en data/partida.js
@@ -193,41 +199,41 @@ function recetaComo(r) {
   const hayNota = r.how.some(h => h.k === 'note');
   const out = r.how.filter(h => !(hayNota && h.k === 'event' && !h.npc)).map(h => {
     switch (h.k) {
-      case 'default': return 'La sabés desde el principio.';
-      case 'skill': return `Al llegar a nivel ${h.lvl} de ${esc(h.skill)}.`;
-      case 'friend': return `Llega por carta cuando tenés ${h.hearts} ${h.hearts === 1 ? 'corazón' : 'corazones'} con ${esc(h.npc)}.`;
-      case 'tv': return `En el programa de cocina de la TV (episodio ${h.ep}).${D.tvNote ? ` <span class="manual">${esc(D.tvNote)} (nota manual)</span>` : ''}`;
-      case 'shop': { const ev = h.cond.some(c => c.other?.startsWith('PLAYER_HAS_SEEN_EVENT')), c = ev ? 'una vez que viste el evento' : condText(h.cond); return `Se compra en ${esc(h.shop)}${h.price ? ` por ${gold(h.price)}` : h.trade ? ` a cambio de ${h.trade[1]} × ${esc(ingName(h.trade[0]))}` : ''}${c ? ` (${c})` : ''}.`; }
-      case 'museum': return `Al donar ${h.items.map(i => esc(ingName(i))).join(', ')} al museo.`;
-      case 'order': return `Recompensa del pedido especial de ${esc(h.npc)}: «${esc(h.name)}».`;
-      case 'event': return `En un evento${h.npc ? ` con ${esc(h.npc)}${h.hearts ? ` (${h.hearts} corazones)` : ''}` : ''} en ${esc(h.loc)}.`;
-      case 'note': return `<span class="manual">${esc(h.text)} (nota manual: no viene en los datos del juego)</span>`;
+      case 'default': return T('La sabés desde el principio.');
+      case 'skill': return T('Al llegar a nivel {n} de {s}.', { n: h.lvl, s: esc(h.skill) });
+      case 'friend': return T('Llega por carta cuando tenés {n} {h} con {p}.', { n: h.hearts, h: h.hearts === 1 ? T('corazón') : T('corazones'), p: esc(h.npc) });
+      case 'tv': return T('En el programa de cocina de la TV (episodio {n}).', { n: h.ep }) + (D.tvNote ? ` <span class="manual">${esc(D.tvNote)} ${T('(nota manual)')}</span>` : '');
+      case 'shop': { const ev = h.cond.some(c => c.other?.startsWith('PLAYER_HAS_SEEN_EVENT')), c = ev ? T('una vez que viste el evento') : condText(h.cond); return T('Se compra en {s}{p}{c}.', { s: esc(h.shop), p: h.price ? T(' por {g}', { g: gold(h.price) }) : h.trade ? T(' a cambio de {n} × {x}', { n: h.trade[1], x: esc(ingName(h.trade[0])) }) : '', c: c ? ` (${c})` : '' }); }
+      case 'museum': return T('Al donar {l} al museo.', { l: h.items.map(i => esc(ingName(i))).join(', ') });
+      case 'order': return T('Recompensa del pedido especial de {p}: {n}.', { p: esc(h.npc), n: comillas(esc(h.name)) });
+      case 'event': return T('En un evento{p} en {l}.', { p: h.npc ? T(' con {p}', { p: esc(h.npc) }) + (h.hearts ? T(' ({n} corazones)', { n: h.hearts }) : '') : '', l: esc(h.loc) });
+      case 'note': return notaManual(h.text);
     }
     return '';
   }).filter(Boolean);
-  return out.length ? out : ['El juego no registra cómo se aprende.'];
+  return out.length ? out : [T('El juego no registra cómo se aprende.')];
 }
-const BUFF = { FarmingLevel: 'Agricultura', FishingLevel: 'Pesca', MiningLevel: 'Minería', CombatLevel: 'Combate', LuckLevel: 'Suerte', ForagingLevel: 'Recolección', MaxStamina: 'Energía máx.', MagneticRadius: 'Magnetismo', Speed: 'Velocidad', Defense: 'Defensa', Attack: 'Ataque' };
-const buffText = b => Object.entries(b.at).map(([k, v]) => `${BUFF[k] || k} ${v > 0 ? '+' : ''}${v}`).join(', ') + (b.min ? ` durante ${Math.floor(b.min / 60)} h${b.min % 60 ? ` ${b.min % 60} min` : ''}` : '');
+const BUFF = { FarmingLevel: T('Agricultura'), FishingLevel: T('Pesca'), MiningLevel: T('Minería'), CombatLevel: T('Combate'), LuckLevel: T('Suerte'), ForagingLevel: T('Recolección'), MaxStamina: T('Energía máx.'), MagneticRadius: T('Magnetismo'), Speed: T('Velocidad'), Defense: T('Defensa'), Attack: T('Ataque') };
+const buffText = b => Object.entries(b.at).map(([k, v]) => `${BUFF[k] || k} ${v > 0 ? '+' : ''}${v}`).join(', ') + (b.min ? T(' durante {t}', { t: `${Math.floor(b.min / 60)} h${b.min % 60 ? ` ${b.min % 60} min` : ''}` }) : '');
 // Panel de una receta: ingredientes con lo que tenés, cómo se aprende y qué tan seguido la usaste.
 function recetaPanel(r, S) {
-  if (!r) return '<p class="empty">Elegí una receta para ver sus ingredientes.</p>';
+  if (!r) return `<p class="empty">${T('Elegí una receta para ver sus ingredientes.')}</p>`;
   const P = partida(), k = sabida(r), hay = !!P?.inventario;
   const veces = r.cook ? P?.recetas?.cocinadas?.[r.id] : P?.recetas?.craft?.[r.key];
   const filas = r.ing.map(([i, n]) => {
     const t = tengo(i), ok = t >= n, est = S == null || ingEnEstacion(i, S);
-    return `<div class="item-row">${D.catnames[i] ? `<button type="button" class="slot" data-cat="${esc(i)}" data-tip="t:${esc(ingName(i))}" aria-label="${esc(ingName(i))}">${ingSpr(i, 3)}</button>` : slot(i)}<span>${n} × <button type="button" class="link" ${D.catnames[i] ? `data-cat="${esc(i)}"` : `data-ficha="${esc(i)}"`}>${esc(ingName(i))}</button>${hay ? ` <span class="small ${ok ? 'pos' : 'neg'}">(tenés ${t})</span>` : ''}${est ? '' : ' <span class="tag">fuera de temporada</span>'}</span></div>`;
+    return `<div class="item-row">${D.catnames[i] ? `<button type="button" class="slot" data-cat="${esc(i)}" data-tip="t:${esc(ingName(i))}" aria-label="${esc(ingName(i))}">${ingSpr(i, 3)}</button>` : slot(i)}<span>${n} × <button type="button" class="link" ${D.catnames[i] ? `data-cat="${esc(i)}"` : `data-ficha="${esc(i)}"`}>${esc(ingName(i))}</button>${hay ? ` <span class="small ${ok ? 'pos' : 'neg'}">${T('(tenés {n})', { n: t })}</span>` : ''}${est ? '' : ` <span class="tag">${T('fuera de temporada')}</span>`}</span></div>`;
   }).join('');
   return `<div class="item-row"><span class="slot">${recSpr(r, 3)}</span><div><h2 style="margin:0">${esc(r.name)}${r.n > 1 ? ` × ${r.n}` : ''}</h2>
-      <span class="small muted">${r.cook ? 'Receta de cocina' : 'Fabricación'}${r.price ? ` · se vende a ${gold(r.price)}` : ''}</span></div></div>
+      <span class="small muted">${r.cook ? T('Receta de cocina') : T('Fabricación')}${r.price ? T(' · se vende a {g}', { g: gold(r.price) }) : ''}</span></div></div>
     ${!r.big && obj(r.id)?.d ? `<p class="small">${esc(obj(r.id).d)}</p>` : ''}
-    ${r.buffs.length ? `<p class="small">Efecto: ${r.buffs.map(buffText).map(esc).join('; ')}</p>` : ''}
-    <h3>Ingredientes</h3><p class="small muted">Tocá un ingrediente para ver cómo conseguirlo.</p>${filas}
-    ${hay && k ? `<p class="${alcanza(r) > 0 ? 'pos' : 'muted'}">${alcanza(r) > 0 ? `Con lo que tenés te alcanza para ${alcanza(r)}.` : 'Te faltan ingredientes.'}</p>` : ''}
-    <h3>${k ? 'Cómo la aprendiste' : 'Cómo se aprende'}</h3>
+    ${r.buffs.length ? `<p class="small">${T('Efecto: {l}', { l: r.buffs.map(buffText).map(esc).join('; ') })}</p>` : ''}
+    <h3>${T('Ingredientes')}</h3><p class="small muted">${T('Tocá un ingrediente para ver cómo conseguirlo.')}</p>${filas}
+    ${hay && k ? `<p class="${alcanza(r) > 0 ? 'pos' : 'muted'}">${alcanza(r) > 0 ? T('Con lo que tenés te alcanza para {n}.', { n: alcanza(r) }) : T('Te faltan ingredientes.')}</p>` : ''}
+    <h3>${k ? T('Cómo la aprendiste') : T('Cómo se aprende')}</h3>
     ${recetaComo(r).map(t => `<p class="small">${t}</p>`).join('')}
-    ${veces ? `<p class="small muted">${r.cook ? 'La cocinaste' : 'La fabricaste'} ${veces} ${veces === 1 ? 'vez' : 'veces'}.</p>` : ''}
-    ${hay ? '<p class="small muted">Cuenta lo que tenés en la mochila, los cofres y la heladera, según el último guardado.</p>' : ''}`;
+    ${veces ? `<p class="small muted">${T(r.cook ? 'La cocinaste {n} {v}.' : 'La fabricaste {n} {v}.', { n: veces, v: veces === 1 ? T('vez') : T('veces') })}</p>` : ''}
+    ${hay ? `<p class="small muted">${T('Cuenta lo que tenés en la mochila, los cofres y la heladera, según el último guardado.')}</p>` : ''}`;
 }
 
 // ---------- dónde anda cada aldeano: elige la agenda del día como el juego (fecha, corazones, día de la semana)

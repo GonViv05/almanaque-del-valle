@@ -7,7 +7,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 HERE = os.path.dirname(os.path.abspath(__file__)); RAW = os.path.join(HERE, '.raw'); A = os.path.join(os.path.dirname(HERE), 'assets')
 for d in ('sheets', 'ui', 'fonts', 'portraits', 'animals', 'characters'): os.makedirs(os.path.join(A, d), exist_ok=True)
 def cp(src, dst): shutil.copy(os.path.join(RAW, src), os.path.join(A, dst))
-for s, d in [('Maps/springobjects.png', 'o'), ('TileSheets/Objects_2.png', 'o2'), ('TileSheets/crops.png', 'crops'), ('TileSheets/Craftables.png', 'big'), ('LooseSprites/JunimoNote.es-ES.png', 'junimo'), ('LooseSprites/stardewPanorama.png', 'panorama'), ('TileSheets/fruitTrees.png', 'trees')]:
+for s, d in [('Maps/springobjects.png', 'o'), ('TileSheets/Objects_2.png', 'o2'), ('TileSheets/crops.png', 'crops'), ('TileSheets/Craftables.png', 'big'), ('LooseSprites/JunimoNote.es-ES.png', 'junimo'), ('LooseSprites/JunimoNote.png', 'junimo.en'), ('LooseSprites/stardewPanorama.png', 'panorama'), ('TileSheets/fruitTrees.png', 'trees')]:
     cp(s, f'sheets/{d}.png')
 # Pestaña Objetos: armas, herramientas, sombreros, muebles y la hoja de ropa (teñida como en el inventario).
 for s in ['TileSheets/weapons', 'TileSheets/tools', 'Characters/Farmer/hats', 'TileSheets/FreeCactuses'] + ['TileSheets/' + f[:-4] for f in sorted(os.listdir(os.path.join(RAW, 'TileSheets'))) if f.endswith('.png') and 'furniture' in f]:
@@ -37,9 +37,10 @@ Image.open(os.path.join(RAW, 'Maps/springobjects.png')).convert('RGBA').crop((0,
 men.crop((0, 256, 60, 60 + 256)).save(os.path.join(A, 'ui/menu.png'))
 men.crop((128, 128, 192, 192)).save(os.path.join(A, 'ui/slot.png'))
 txt.save(os.path.join(A, 'ui/textbox.png'))
-# Tablero del calendario del pueblo (con los días de la semana en español) y la estrella de los festivales.
+# Tablero del calendario del pueblo (días de la semana en español y en inglés) y la estrella de los festivales.
 bb = Image.open(os.path.join(RAW, 'LooseSprites/Billboard.es-ES.png' if os.path.exists(os.path.join(RAW, 'LooseSprites/Billboard.es-ES.png')) else 'LooseSprites/Billboard.png')).convert('RGBA')
 bb.crop((0, 198, 301, 396)).save(os.path.join(A, 'ui/calendario.png'))
+Image.open(os.path.join(RAW, 'LooseSprites/Billboard.png')).convert('RGBA').crop((0, 198, 301, 396)).save(os.path.join(A, 'ui/calendario.en.png'))  # días en inglés
 bb.crop((140, 398, 150, 408)).save(os.path.join(A, 'ui/star.png'))
 # ---- fuentes: cada píxel de la fuente original pasa a ser un cuadrado en el TTF
 PX = 32

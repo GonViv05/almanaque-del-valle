@@ -28,23 +28,23 @@ function dibujaCal() {
     const c = (d - 1) % 7, r = Math.floor((d - 1) / 7);
     const bd = D.villagers.filter(v => v.bs === s && v.bd === d), fe = festivalesDel(s, d);
     const sel = s === state.season && y === state.year && d === state.day, hoy = pf && pf.s === s && pf.y === y && pf.d === d;
-    const tip = [...fe.map(f => f.name), ...bd.map(v => `Cumpleaños de ${v.name}`), hoy ? 'Día de la partida' : ''].filter(Boolean).join(' · ');
+    const tip = [...fe.map(f => f.name), ...bd.map(v => T('Cumpleaños de {n}', { n: v.name })), hoy ? T('Día de la partida') : ''].filter(Boolean).join(' · ');
     celdas.push(`<button type="button" class="cd${sel ? ' sel' : ''}${hoy ? ' hoy' : ''}" data-cd="${d}" tabindex="${d === foco ? 0 : -1}"
       style="left:${(CAL.x + c * CAL.c + 1) * z}px;top:${(CAL.y + r * CAL.c + 1) * z}px;width:${(CAL.c - 1) * z}px;height:${(CAL.c - 1) * z}px"
       aria-label="${DOW[c]} ${d}${tip ? ': ' + esc(tip) : ''}"${sel ? ' aria-current="date"' : ''}${tip ? ` data-tip="t:${esc(tip)}"` : ''}>${fe.map(() => `<i class="ui" style="width:${10 * z}px;height:${10 * z}px;background-image:url(assets/ui/star.png)"></i>`).join('')}${bd.map(v => face(v, 14 * z)).join('')}</button>`);
   }
   const lista = D.festivals.filter(f => f.s === s).sort((a, b) => a.d[0] - b.d[0]);
   calpop.innerHTML = `<div class="calbar">
-      <button type="button" class="iconb" data-cy="-1" aria-label="Año anterior"${y === 1 ? ' disabled' : ''}><img src="assets/ui/left.png" alt=""></button>
-      <span class="calano">Año ${y}</span>
-      <button type="button" class="iconb" data-cy="1" aria-label="Año siguiente"><img src="assets/ui/right.png" alt=""></button>
-      <span class="row" role="group" aria-label="Estación">${SEASONS.map((n, i) => `<button type="button" class="btn" data-cs="${i}" aria-pressed="${i === s}" aria-label="${n}" data-tip="t:${n}">${seasonIcon(i)}</button>`).join('')}</span>
-      <button type="button" class="cerrar" data-ccerrar aria-label="Cerrar calendario">${ui('cancel', 44, 44)}</button>
+      <button type="button" class="iconb" data-cy="-1" aria-label="${T('Año anterior')}"${y === 1 ? ' disabled' : ''}><img src="assets/ui/left.png" alt=""></button>
+      <span class="calano">${T('Año {y}', { y })}</span>
+      <button type="button" class="iconb" data-cy="1" aria-label="${T('Año siguiente')}"><img src="assets/ui/right.png" alt=""></button>
+      <span class="row" role="group" aria-label="${T('Estación')}">${SEASONS.map((n, i) => `<button type="button" class="btn" data-cs="${i}" aria-pressed="${i === s}" aria-label="${n}" data-tip="t:${n}">${seasonIcon(i)}</button>`).join('')}</span>
+      <button type="button" class="cerrar" data-ccerrar aria-label="${T('Cerrar calendario')}">${ui('cancel', 44, 44)}</button>
     </div>
-    <div class="board" role="grid" aria-label="${SEASONS[s]}, año ${y}" style="width:${CAL.w * z}px;height:${CAL.h * z}px">${celdas.join('')}</div>
+    <div class="board" role="grid" aria-label="${SEASONS[s]}, ${T('año {y}', { y })}" style="width:${CAL.w * z}px;height:${CAL.h * z}px">${celdas.join('')}</div>
     <div class="calfoot small">
-      ${pf ? `<button type="button" class="btn" data-choy>Ir al día de la partida (${pf.d} de ${SEASONS[pf.s].toLowerCase()}, año ${pf.y})</button>` : ''}
-      <p class="muted"><span class="sw sel"></span>día elegido${pf ? ' <span class="sw hoy"></span>día de la partida' : ''} · <i class="ui" style="width:16px;height:16px;background-image:url(assets/ui/star.png)"></i> festival · retrato: cumpleaños</p>
+      ${pf ? `<button type="button" class="btn" data-choy>${T('Ir al día de la partida ({f})', { f: T('{d} de {s}', { d: pf.d, s: lc(SEASONS[pf.s]) }) + ', ' + T('año {y}', { y: pf.y }) })}</button>` : ''}
+      <p class="muted"><span class="sw sel"></span>${T('día elegido')}${pf ? ` <span class="sw hoy"></span>${T('día de la partida')}` : ''} · <i class="ui" style="width:16px;height:16px;background-image:url(assets/ui/star.png)"></i> ${T('festival')} · ${T('retrato: cumpleaños')}</p>
       ${lista.length ? `<p>${lista.map(f => `${esc(f.name)}: ${diasFest(f)}`).join(' · ')}</p>` : ''}
     </div>`;
   $(`[data-cd="${foco}"]`, calpop)?.focus();

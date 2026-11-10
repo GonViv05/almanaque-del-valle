@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Almanaque de Stardew Valley</title>
+<title>Almanaque del Valle</title>
 <link rel="icon" href="assets/ui/heart.png">
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/style.css">
@@ -11,7 +11,7 @@
 <body>
 <div id="app">
   <header id="top">
-    <h1>Almanaque del Valle</h1>
+    <div id="marca"><h1>Almanaque del Valle</h1><div id="redes"></div></div>
     <div id="buscar" role="search"></div>
     <div id="hud"></div>
     <div id="calpop" class="menu" role="dialog" aria-label="Calendario" hidden></div>
@@ -21,7 +21,11 @@
 </div>
 <div id="velo" hidden><div id="ficha" class="menu" role="dialog" aria-modal="true" aria-labelledby="ficha-t" tabindex="-1"></div></div>
 <div id="tip" class="menu" hidden></div>
-<script src="data/data.js"></script>
+<script src="js/i18n-en.js"></script>
+<script src="js/i18n.js"></script>
+<!-- Datos del juego en el idioma elegido; una instalación vieja solo tiene data.js (español). -->
+<script>document.write('<script src="data/' + (LANG === 'en' ? 'data.en.js' : 'data.js') + '"><\/script>');</script>
+<script>if (!window.SDV) document.write('<script src="data/data.js"><\/script>');</script>
 <script src="data/partida.js"></script>
 <script src="js/calc.js"></script>
 <script src="js/core.js"></script>

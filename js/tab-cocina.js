@@ -1,6 +1,6 @@
 // Cocina: qué podés cocinar ya, qué conviene en la estación (ingredientes de temporada) y cómo se aprende cada receta.
 TABS.cocina = {
-  label: 'Cocina', icon: () => itemSpr('194', 2),
+  label: T('Cocina'), icon: () => itemSpr('194', 2),
   render(v) {
     const s = state._coc ||= { sel: null, q: '', locked: false, season: null };
     if (s.season == null || s.stamp !== state.stamp) { s.season = state.season; s.stamp = state.stamp; }
@@ -16,14 +16,14 @@ TABS.cocina = {
       const bloq = todas.filter(r => sabida(r) === false).length;
       const grid = l => `<div class="grid">${l.map(r => recetaSlot(r, s, sabida(r))).join('')}</div>`;
       v.innerHTML = `<div class="split"><section>
-        <div class="bar-filters">${seasonBar('cs', S)}<label class="field" style="width:240px"><span>Buscar</span><input class="input" id="kq" value="${esc(s.q)}" placeholder="Nombre"></label>
-        ${leidas ? `<button type="button" class="btn" id="klock" aria-pressed="${s.locked}">${s.locked ? 'Ocultar' : 'Ver'} las que no sabés (${bloq})</button>` : ''}</div>
-        ${leidas ? `<p class="small muted">Sabés ${todas.length - bloq} de ${todas.length} recetas de cocina.</p>` : '<p class="small muted">Sin partida leída: se muestran todas las recetas.</p>'}
-        ${hay ? `<h2>Podés cocinar ya</h2>${ya.length ? grid(ya) : '<p class="small">Con lo que tenés guardado no alcanza para ninguna receta que sepas.</p>'}` : ''}
-        <h2 style="margin-top:12px">De temporada en ${SEASONS[S].toLowerCase()}</h2>
-        <p class="small muted">Todos los ingredientes se consiguen en esta estación (cosecha, pesca, recolección, animales, máquinas o tiendas).</p>
-        ${temporada.length ? grid(temporada) : '<p class="empty">Ninguna receta con todos los ingredientes de esta estación.</p>'}
-        ${fuera.length ? `<h3>Con ingredientes de otra estación</h3><p class="small muted">Sirven si guardaste esos ingredientes. Primero las que menos te faltan.</p>${grid(fuera)}` : ''}
+        <div class="bar-filters">${seasonBar('cs', S)}<label class="field" style="width:240px"><span>${T('Buscar')}</span><input class="input" id="kq" value="${esc(s.q)}" placeholder="${T('Nombre')}"></label>
+        ${leidas ? `<button type="button" class="btn" id="klock" aria-pressed="${s.locked}">${s.locked ? T('Ocultar las que no sabés ({n})', { n: bloq }) : T('Ver las que no sabés ({n})', { n: bloq })}</button>` : ''}</div>
+        ${leidas ? `<p class="small muted">${T('Sabés {a} de {t} recetas de cocina.', { a: todas.length - bloq, t: todas.length })}</p>` : `<p class="small muted">${T('Sin partida leída: se muestran todas las recetas.')}</p>`}
+        ${hay ? `<h2>${T('Podés cocinar ya')}</h2>${ya.length ? grid(ya) : `<p class="small">${T('Con lo que tenés guardado no alcanza para ninguna receta que sepas.')}</p>`}` : ''}
+        <h2 style="margin-top:12px">${T('De temporada en {s}', { s: lc(SEASONS[S]) })}</h2>
+        <p class="small muted">${T('Todos los ingredientes se consiguen en esta estación (cosecha, pesca, recolección, animales, máquinas o tiendas).')}</p>
+        ${temporada.length ? grid(temporada) : `<p class="empty">${T('Ninguna receta con todos los ingredientes de esta estación.')}</p>`}
+        ${fuera.length ? `<h3>${T('Con ingredientes de otra estación')}</h3><p class="small muted">${T('Sirven si guardaste esos ingredientes. Primero las que menos te faltan.')}</p>${grid(fuera)}` : ''}
       </section><aside class="panel">${recetaPanel(todas.find(r => r.key === s.sel), S)}</aside></div>`;
     };
     draw();

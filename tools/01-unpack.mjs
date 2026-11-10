@@ -27,6 +27,7 @@ addReaders({ ColorReader });
 
 const WANT = [
   /^Data\/[^/]+\.xnb$/, /^Data\/.*\.es-ES\.xnb$/,
+  /^Data\/(Festivals|Events|TV)\/[^.]+\.xnb$/,  // versión original (inglés) de las subcarpetas
   /^Strings\/.*\.xnb$/,
   /^Characters\/schedules\/[^.]+\.xnb$/,
   /^Maps\/(springobjects|MenuTiles|Festivals)\.xnb$/,

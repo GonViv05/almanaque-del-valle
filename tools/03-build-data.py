@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Genera ../data/data.js a partir de tools/.raw (archivos del juego ya desempaquetados)."""
-import json, os, re, collections
+"""Genera ../data/data.js (español) o ../data/data.en.js (inglés, con --lang en) a partir de tools/.raw
+(archivos del juego ya desempaquetados). Los textos salen de los archivos del juego en ese idioma."""
+import json, os, re, collections, argparse
 HERE = os.path.dirname(os.path.abspath(__file__)); RAW = os.path.join(HERE, '.raw'); ROOT = os.path.dirname(HERE)
+_ap = argparse.ArgumentParser(); _ap.add_argument('--lang', choices=('es', 'en'), default='es'); LANG = _ap.parse_args().lang
+EN = LANG == 'en'; SUF = '' if EN else '.es-ES'
+def tx(es, en): return en if EN else es  # textos propios del almanaque (los del juego salen de sus archivos)
 def C(p): return json.load(open(os.path.join(RAW, p + '.json'), encoding='utf8'))['content']
 def has(p): return os.path.exists(os.path.join(RAW, p + '.json'))
+def CL(p): return C(p + SUF) if has(p + SUF) else C(p)  # la versión del idioma elegido, o la original
 _str = {}
 def strings(f):
     if f not in _str:
         d = dict(C('Strings/' + f)) if has('Strings/' + f) else {}
-        if has(f'Strings/{f}.es-ES'): d.update(C(f'Strings/{f}.es-ES'))
+        if not EN and has(f'Strings/{f}.es-ES'): d.update(C(f'Strings/{f}.es-ES'))
         _str[f] = d
     return _str[f]
 TOK = re.compile(r'\[LocalizedText Strings[\\/]+([^:\]]+):([^\s\]]+)((?:\s+[^\[\]]+|\s+\[[^\]]*\]+)*)\]')
@@ -24,11 +29,11 @@ def tr(s):
         s = n
     return re.sub(r'\[[A-Za-z]+Text[^\]]*\]', '', s).replace('\\n', '\n').strip()
 OBJ = C('Data/Objects'); CROPS = C('Data/Crops'); FISH = C('Data/Fish'); LOC = C('Data/Locations'); SHOPS = C('Data/Shops'); MACH = C('Data/Machines')
-ANI = C('Data/FarmAnimals'); BUILD = C('Data/Buildings'); CH = C('Data/Characters'); GIFT = C('Data/NPCGiftTastes'); GIFT_ES = C('Data/NPCGiftTastes.es-ES')
-BUN = C('Data/Bundles.es-ES'); MON = C('Data/Monsters'); MON_ES = C('Data/Monsters.es-ES'); TREES = C('Data/FruitTrees'); GIANT = C('Data/GiantCrops'); RB = C('Data/RandomBundles'); BN = C('Strings/BundleNames.es-ES')
+ANI = C('Data/FarmAnimals'); BUILD = C('Data/Buildings'); CH = C('Data/Characters'); GIFT = C('Data/NPCGiftTastes'); GIFT_ES = CL('Data/NPCGiftTastes')
+BUN = CL('Data/Bundles'); MON = C('Data/Monsters'); MON_ES = CL('Data/Monsters'); TREES = C('Data/FruitTrees'); GIANT = C('Data/GiantCrops'); RB = C('Data/RandomBundles'); BN = CL('Strings/BundleNames')
 CRAFT = C('Data/CraftingRecipes'); COOK = C('Data/CookingRecipes'); BIG = C('Data/BigCraftables')
 M = strings('StringsFromCSFiles'); LS = strings('Locations'); UI = strings('UI')
-SEASON = ['Primavera', 'Verano', 'Otoño', 'Invierno']; SKEY = {'spring': 0, 'summer': 1, 'fall': 2, 'winter': 3}
+SEASON = [tx('Primavera', 'Spring'), tx('Verano', 'Summer'), tx('Otoño', 'Fall'), tx('Invierno', 'Winter')]; SKEY = {'spring': 0, 'summer': 1, 'fall': 2, 'winter': 3}
 CAT = {-75: 'Object.cs.12851', -4: 'Object.cs.12852', -7: 'Object.cs.12853', -79: 'Object.cs.12854', -74: 'Object.cs.12855', -19: 'Object.cs.12856', -21: 'Object.cs.12857', -22: 'Object.cs.12858', -20: 'Object.cs.12860', -26: 'Object.cs.12862', -8: 'Object.cs.12863', -5: 'Object.cs.12864', -6: 'Object.cs.12864', -18: 'Object.cs.12864', -14: 'Object.cs.12864', -80: 'Object.cs.12866', -28: 'Object.cs.12867', -15: 'Object.cs.12868', -16: 'Object.cs.12868', -81: 'Object.cs.12869', -2: 'Object.cs.12850', -12: 'Object.cs.12850', -27: 'Object.cs.12862', -23: 'Object.cs.12852'}
 def catname(c): return M.get(CAT.get(c, ''), '')
 def sheet(o):
@@ -41,9 +46,9 @@ objects = {}
 GRUPO = {'Ring': M['Ring.cs.1'], 'Arch': M['Object.cs.12849'], 'Minerals': M['Object.cs.12850']}
 def grupo(o):
     if o['Type'] in GRUPO: return GRUPO[o['Type']]
-    if o['Category'] in (-102, -103): return strings('1_6_Strings').get('Book_Category', 'Libro')
+    if o['Category'] in (-102, -103): return strings('1_6_Strings').get('Book_Category', tx('Libro', 'Book'))
     if o['Category'] == -24: return M['Object.cs.12859']
-    return catname(o['Category']) or 'Otros'
+    return catname(o['Category']) or tx('Otros', 'Other')
 for k, o in OBJ.items():
     n = tr(o['DisplayName']) or o['Name']; tags = o.get('ContextTags') or []
     objects[k] = e = dict(n=n, en=o['Name'], d=tr(o['Description']) or '', p=o['Price'], c=o['Category'], cn=catname(o['Category']), e=o['Edibility'], s=sheet(o), g=grupo(o))
@@ -56,14 +61,14 @@ for k, o in OBJ.items():
 # ---------- tiendas
 FEST = {'EggFestival': 'spring13', 'FlowerDance': 'spring24', 'Luau': 'summer11', 'DanceOfTheMoonlightJellies': 'summer28', 'StardewValleyFair': 'fall16', 'SpiritsEve': 'fall27', 'FestivalOfIce': 'winter8', 'FeastOfTheWinterStar': 'winter25'}
 def festname(k):
-    for p in (f'Data/Festivals/{FEST[k]}', f'Data/Festivals/{FEST[k]}.es-ES'):
+    for p in (f'Data/Festivals/{FEST[k]}{SUF}', f'Data/Festivals/{FEST[k]}'):
         if has(p): return C(p).get('name', k)
     return k
-SHOPN = {'SeedShop': M['MapPage.cs.11078'], 'Joja': M['MapPage.cs.11105'], 'FishShop': M['MapPage.cs.11107'], 'Blacksmith': M['MapPage.cs.11081'], 'AnimalShop': M['MapPage.cs.11068'], 'Carpenter': M['MapPage.cs.11094'], 'Saloon': M['MapPage.cs.11172'], 'Sandy': 'Oasis', 'AdventureShop': M['MapPage.cs.11099'], 'Dwarf': 'Enano', 'ShadowShop': 'Krobus', 'IslandTrade': strings('WorldMap').get('GingerIsland_North_Trader', 'Comerciante Isleño'), 'Traveler': 'Carro ambulante', 'Hospital': M['MapPage.cs.11076'], 'Casino': 'Casino', 'ResortBar': 'Bar del centro turístico', 'VolcanoShop': 'Enano del volcán', 'QiGemShop': 'Sala de nueces de Qi', 'Bookseller': 'Librera', 'Raccoon': 'Mapache'}
+SHOPN = {'SeedShop': M['MapPage.cs.11078'], 'Joja': M['MapPage.cs.11105'], 'FishShop': M['MapPage.cs.11107'], 'Blacksmith': M['MapPage.cs.11081'], 'AnimalShop': M['MapPage.cs.11068'], 'Carpenter': M['MapPage.cs.11094'], 'Saloon': M['MapPage.cs.11172'], 'Sandy': 'Oasis', 'AdventureShop': M['MapPage.cs.11099'], 'Dwarf': tx('Enano', 'Dwarf'), 'ShadowShop': 'Krobus', 'IslandTrade': strings('WorldMap').get('GingerIsland_North_Trader', tx('Comerciante Isleño', 'Island Trader')), 'Traveler': tx('Carro ambulante', 'Traveling Cart'), 'Hospital': M['MapPage.cs.11076'], 'Casino': 'Casino', 'ResortBar': tx('Bar del centro turístico', 'Island Resort Bar'), 'VolcanoShop': tx('Enano del volcán', 'Volcano Dwarf'), 'QiGemShop': tx('Sala de nueces de Qi', "Qi's Walnut Room"), 'Bookseller': tx('Librera', 'Bookseller'), 'Raccoon': tx('Mapache', 'Raccoon')}
 for k in FEST: SHOPN[f'Festival_{k}_Pierre'] = festname(k)
 SHOPN['Festival_StardewValleyFair_StarTokens'] = festname('StardewValleyFair')
 SHOPN['Festival_FestivalOfIce_TravelingMerchant'] = festname('FestivalOfIce')
-ACH = C('Data/Achievements.es-ES') if has('Data/Achievements.es-ES') else C('Data/Achievements')
+ACH = CL('Data/Achievements')
 SKILLK = {'FARMING': 'Farmer.cs.1991', 'MINING': 'Farmer.cs.1992', 'FISHING': 'Farmer.cs.1993', 'FORAGING': 'Farmer.cs.1994', 'COMBAT': 'Farmer.cs.1996'}
 def cond(c):
     if not c: return []
@@ -118,14 +123,14 @@ for sk, sh in SHOPS.items():
             if sh.get('Currency'): e['currency'] = sh['Currency']
             sold[oid].append(e)
 # ---------- cultivos
-HM = {0: 'mano', 1: 'hoz'}
+HM = {0: tx('mano', 'hand'), 1: tx('hoz', 'scythe')}
 crops = []
 for seed, c in CROPS.items():
     h = c['HarvestItemId']
     if seed in ('495', '496', '497', '498', '770', '885') or h not in OBJ: continue
     o = OBJ[h]; ss = OBJ.get(seed)
     crops.append(dict(id=seed, item=h, name=tr(o['DisplayName']), seed=tr(ss['DisplayName']) if ss else seed, seasons=c['Seasons'], phases=c['DaysInPhase'], regrow=c['RegrowDays'], raised=c['IsRaised'], paddy=c['IsPaddyCrop'], water=c['NeedsWatering'],
-        minH=c['HarvestMinStack'], maxH=c['HarvestMaxStack'], perLvl=c['HarvestMaxIncreasePerFarmingLevel'], extra=c['ExtraHarvestChance'], minQ=c['HarvestMinQuality'], method=HM.get(c['HarvestMethod'], 'mano'),
+        minH=c['HarvestMinStack'], maxH=c['HarvestMaxStack'], perLvl=c['HarvestMaxIncreasePerFarmingLevel'], extra=c['ExtraHarvestChance'], minQ=c['HarvestMinQuality'], method=HM.get(c['HarvestMethod'], HM[0]),
         price=o['Price'], cat=o['Category'], cn=catname(o['Category']), edible=o['Edibility'], sprite=c['SpriteIndex'], sheet=c['Texture'], giant=any((v.get('FromItemId') or '').endswith(h) for v in GIANT.values()), indoor=any('NotOutside' in (r.get('Id') or '') for r in c['PlantableLocationRules'] or []), sources=sold.get(seed, [])))
 crops.sort(key=lambda c: (min(c['seasons'] or [9]), c['name']))
 trees = []
@@ -136,9 +141,9 @@ for k, t in TREES.items():
 FERT = [('368', 'quality', 1), ('369', 'quality', 2), ('919', 'quality', 3), ('465', 'speed', .10), ('466', 'speed', .25), ('918', 'speed', .33), ('370', 'water', 1), ('371', 'water', 2), ('920', 'water', 3)]
 fert = [dict(id=i, kind=k, val=v, name=tr(OBJ[i]['DisplayName']), desc=tr(OBJ[i]['Description']), sources=sold.get(i, [])) for i, k, v in FERT]
 # ---------- peces
-LN = {'Beach': M['MapPage.cs.11174'], 'Town': M['MapPage.cs.11190'], 'Forest': M['MapPage.cs.11186'], 'Mountain': M['MapPage.cs.11177'], 'Backwoods': M['MapPage.cs.11065'], 'Woods': M['MapPage.cs.11114'], 'Sewer': M['MapPage.cs.11089'], 'Desert': M['MapPage.cs.11062'], 'BugLand': 'Guarida del Bicho Mutante', 'WitchSwamp': 'Pantano de la Bruja', 'Submarine': 'Mercado Nocturno (submarino)', 'BeachNightMarket': 'Mercado Nocturno (muelle)', 'Caldera': 'Caldera del volcán', 'IslandNorth': 'Isla Jengibre (norte)', 'IslandSouth': 'Isla Jengibre (sur)', 'IslandSouthEast': 'Isla Jengibre (sureste)', 'IslandSouthEastCave': strings('WorldMap').get('GingerIsland_SouthEast_PirateCove', 'Cala Pirata'), 'IslandWest': 'Isla Jengibre (oeste)', 'UndergroundMine': M['MapPage.cs.11098'], 'Farm_Forest': 'Granja del bosque'}
-AN = {'River': 'río', 'Lake': 'lago', 'Waterfall': 'cascada', 'Pond': 'estanque', 'Ocean': 'mar', 'Freshwater': 'agua dulce', 'TownRiver': 'río'}
-BEH = {'mixed': 'Mixto', 'dart': 'Dardo', 'smooth': 'Suave', 'sinker': 'Hundido', 'floater': 'Flotante'}
+LN = {'Beach': M['MapPage.cs.11174'], 'Town': M['MapPage.cs.11190'], 'Forest': M['MapPage.cs.11186'], 'Mountain': M['MapPage.cs.11177'], 'Backwoods': M['MapPage.cs.11065'], 'Woods': M['MapPage.cs.11114'], 'Sewer': M['MapPage.cs.11089'], 'Desert': M['MapPage.cs.11062'], 'BugLand': tx('Guarida del Bicho Mutante', 'Mutant Bug Lair'), 'WitchSwamp': tx('Pantano de la Bruja', "Witch's Swamp"), 'Submarine': tx('Mercado Nocturno (submarino)', 'Night Market (submarine)'), 'BeachNightMarket': tx('Mercado Nocturno (muelle)', 'Night Market (dock)'), 'Caldera': tx('Caldera del volcán', 'Volcano Caldera'), 'IslandNorth': tx('Isla Jengibre (norte)', 'Ginger Island (north)'), 'IslandSouth': tx('Isla Jengibre (sur)', 'Ginger Island (south)'), 'IslandSouthEast': tx('Isla Jengibre (sureste)', 'Ginger Island (southeast)'), 'IslandSouthEastCave': strings('WorldMap').get('GingerIsland_SouthEast_PirateCove', tx('Cala Pirata', 'Pirate Cove')), 'IslandWest': tx('Isla Jengibre (oeste)', 'Ginger Island (west)'), 'UndergroundMine': M['MapPage.cs.11098'], 'Farm_Forest': tx('Granja del bosque', 'Forest Farm')}
+AN = {'River': tx('río', 'river'), 'Lake': tx('lago', 'lake'), 'Waterfall': tx('cascada', 'waterfall'), 'Pond': tx('estanque', 'pond'), 'Ocean': tx('mar', 'ocean'), 'Freshwater': tx('agua dulce', 'freshwater'), 'TownRiver': tx('río', 'river')}
+BEH = {'mixed': tx('Mixto', 'Mixed'), 'dart': tx('Dardo', 'Dart'), 'smooth': tx('Suave', 'Smooth'), 'sinker': tx('Hundido', 'Sinker'), 'floater': tx('Flotante', 'Floater')}
 # Qué estación vale en cada zona: la columna de Data/Fish no refleja lo que aparece en 1.6, manda Data/Locations.
 ALL_S = [0, 1, 2, 3]; EVENT_ZONES = {'Submarine', 'BeachNightMarket'}
 NON_SEASONAL = ('WEATHER', 'TIME', '!PLAYER_SPECIAL_ORDER_RULE_ACTIVE', 'PLAYER_SPECIAL_ORDER_RULE_ACTIVE')
@@ -223,16 +228,16 @@ def taste(npc, oid, o, p):
 villagers = []
 giftable = {k: o for k, o in OBJ.items() if o.get('CanBeGivenAsGift', True) and o['Category'] not in (0, -999) and o['Type'] not in ('Quest',) and 'Book_' not in k and o['Name'] != 'Weeds'}
 SCHED_LOC = dict(LN); SCHED_LOC.update({k: tr(v['DisplayName']) for k, v in LOC.items() if v.get('DisplayName') and k not in LN and 'Farm' not in k})
-SCHED_LOC.update({'SamHouse': M['MapPage.cs.11071'], 'JoshHouse': M['MapPage.cs.11092'], 'HaleyHouse': M['MapPage.cs.11073'], 'Hospital': M['MapPage.cs.11076'], 'HarveyRoom': M['MapPage.cs.11076'], 'SeedShop': M['MapPage.cs.11078'], 'ScienceHouse': M['MapPage.cs.11094'], 'SebastianRoom': M['MapPage.cs.11094'], 'AnimalShop': M['MapPage.cs.11068'], 'Trailer': M['MapPage.cs.11091'], 'ManorHouse': M['MapPage.cs.11085'], 'ArchaeologyHouse': M['MapPage.cs.11086'], 'LeahHouse': M['MapPage.cs.11070'], 'ElliottHouse': M['MapPage.cs.11088'], 'FishShop': M['MapPage.cs.11107'], 'CommunityCenter': M['MapPage.cs.11117'], 'JojaMart': M['MapPage.cs.11105'], 'Tent': M['MapPage.cs.11097'], 'Blacksmith': M['MapPage.cs.11081'], 'SandyHouse': 'Oasis', 'Railroad': M['MapPage.cs.11119'], 'BusStop': M['MapPage.cs.11066'], 'BathHouse_MensLocker': M['MapPage.cs.11110'], 'BathHouse_Entry': M['MapPage.cs.11110'], 'Saloon': M['MapPage.cs.11172'], 'Sunroom': M['MapPage.cs.11078'], 'LeoTreeHouse': 'Casa del árbol de Leo', 'IslandHut': 'Isla Jengibre (cabaña de Leo)', 'IslandEast': 'Isla Jengibre (este)', 'IslandShrine': 'Isla Jengibre (santuario)', 'WizardHouse': M['MapPage.cs.11067'], 'Mine': M['MapPage.cs.11098'], 'Sewer': M['MapPage.cs.11089'], 'SkullCave': 'Caverna de la Calavera', 'Club': 'Casino'})
-DOW = {'Mon': 'Lunes', 'Tue': 'Martes', 'Wed': 'Miércoles', 'Thu': 'Jueves', 'Fri': 'Viernes', 'Sat': 'Sábado', 'Sun': 'Domingo'}
+SCHED_LOC.update({'SamHouse': M['MapPage.cs.11071'], 'JoshHouse': M['MapPage.cs.11092'], 'HaleyHouse': M['MapPage.cs.11073'], 'Hospital': M['MapPage.cs.11076'], 'HarveyRoom': M['MapPage.cs.11076'], 'SeedShop': M['MapPage.cs.11078'], 'ScienceHouse': M['MapPage.cs.11094'], 'SebastianRoom': M['MapPage.cs.11094'], 'AnimalShop': M['MapPage.cs.11068'], 'Trailer': M['MapPage.cs.11091'], 'ManorHouse': M['MapPage.cs.11085'], 'ArchaeologyHouse': M['MapPage.cs.11086'], 'LeahHouse': M['MapPage.cs.11070'], 'ElliottHouse': M['MapPage.cs.11088'], 'FishShop': M['MapPage.cs.11107'], 'CommunityCenter': M['MapPage.cs.11117'], 'JojaMart': M['MapPage.cs.11105'], 'Tent': M['MapPage.cs.11097'], 'Blacksmith': M['MapPage.cs.11081'], 'SandyHouse': 'Oasis', 'Railroad': M['MapPage.cs.11119'], 'BusStop': M['MapPage.cs.11066'], 'BathHouse_MensLocker': M['MapPage.cs.11110'], 'BathHouse_Entry': M['MapPage.cs.11110'], 'Saloon': M['MapPage.cs.11172'], 'Sunroom': M['MapPage.cs.11078'], 'LeoTreeHouse': tx('Casa del árbol de Leo', "Leo's Treehouse"), 'IslandHut': tx('Isla Jengibre (cabaña de Leo)', "Ginger Island (Leo's hut)"), 'IslandEast': tx('Isla Jengibre (este)', 'Ginger Island (east)'), 'IslandShrine': tx('Isla Jengibre (santuario)', 'Ginger Island (shrine)'), 'WizardHouse': M['MapPage.cs.11067'], 'Mine': M['MapPage.cs.11098'], 'Sewer': M['MapPage.cs.11089'], 'SkullCave': tx('Caverna de la Calavera', 'Skull Cavern'), 'Club': 'Casino'})
+DOW = {'Mon': tx('Lunes', 'Monday'), 'Tue': tx('Martes', 'Tuesday'), 'Wed': tx('Miércoles', 'Wednesday'), 'Thu': tx('Jueves', 'Thursday'), 'Fri': tx('Viernes', 'Friday'), 'Sat': tx('Sábado', 'Saturday'), 'Sun': tx('Domingo', 'Sunday')}
 def sched_label(k):
     p = k.split('_'); out = []
     for x in p:
         if x in SKEY: out.append(SEASON[SKEY[x]])
         elif x in DOW: out.append(DOW[x])
-        elif x == 'rain': out.append('Lluvia')
-        elif x == 'rain2': out.append('Lluvia (alterno)')
-        elif x.isdigit(): out.append(('día ' + x) if not out or not out[-1].startswith('día') else (x + '+ corazones'))
+        elif x == 'rain': out.append(tx('Lluvia', 'Rain'))
+        elif x == 'rain2': out.append(tx('Lluvia (alterno)', 'Rain (alternate)'))
+        elif x.isdigit(): out.append((tx('día ', 'day ') + x) if not out or not out[-1].startswith(tx('día', 'day')) else (x + tx('+ corazones', '+ hearts')))
         else: out.append(x)
     return ' · '.join(out)
 def sched_parse(s, table, seen=()):
@@ -321,7 +326,7 @@ for k, t in C('Data/WildTrees').items():
             prev = next((e for e in tap[i] if e['seed'] == seed and e['days'] == x.get('DaysUntilReady', 0)), None)
             if prev: prev['noWinter'] = prev['noWinter'] and nw  # alguna regla sin condición: también en invierno
             else: tap[i].append(dict(seed=seed, days=x.get('DaysUntilReady', 0), noWinter=nw))
-TAPPER = tr(BIG['105']['DisplayName']) if '105' in BIG else 'Sangrador'
+TAPPER = tr(BIG['105']['DisplayName']) if '105' in BIG else tx('Sangrador', 'Tapper')
 craft = {}
 for rec, v in list(CRAFT.items()) + list(COOK.items()):
     p = v.split('/'); out = p[2].split()[0]
@@ -387,7 +392,7 @@ for k, v in BUN.items():
         if r[j] == '-1': items.append(dict(gold=int(r[j + 1])))
         else: src(r[j]); items.append(dict(id=r[j], n=int(r[j + 1]), q=int(r[j + 2])))
     slots = int(p[4]) if len(p) > 4 and p[4].strip() else len(items)
-    if a not in rooms: rooms[a] = dict(id=a, name=LS.get('CommunityCenter_AreaName_' + AREA[a], a), reward=UI.get('JunimoNote_Reward' + RW.get(a, ''), '').replace('Recompensa: ', '').replace(' <', ''), bundles=[])
+    if a not in rooms: rooms[a] = dict(id=a, name=LS.get('CommunityCenter_AreaName_' + AREA[a], a), reward=re.sub(r'^(Recompensa|Reward): ', '', UI.get('JunimoNote_Reward' + RW.get(a, ''), '')).replace(' <', ''), bundles=[])
     rooms[a]['bundles'].append(dict(id=bid, en=p[0], name=p[6] if len(p) > 6 and p[6] else p[0], reward=reward(p[1]), items=items, slots=slots, color=int(p[3]) if p[3].strip().lstrip('-').isdigit() else 0))
 name2id = {}
 for k, o in OBJ.items(): name2id.setdefault(o['Name'], k)
@@ -405,11 +410,11 @@ for a in RB:
         return dict(name=BN.get(b['Name'], b['Name']), items=items, pick=b['Pick'], req=b['RequiredItems'], reward=b['Reward'])
     for s in a['BundleSets'] or []: sets.append([conv(b) for b in s['Bundles']])
     remix.append(dict(area=a['AreaName'], name=LS.get('CommunityCenter_AreaName_' + AREA.get(a['AreaName'], ''), a['AreaName']), sets=sets, random=[conv(b) for b in a.get('Bundles') or []]))
-NOTES = json.load(open(os.path.join(HERE, 'notas-manuales.json'), encoding='utf8'))
+NOTES = json.load(open(os.path.join(HERE, 'notas-manuales.en.json' if EN else 'notas-manuales.json'), encoding='utf8'))
 # ---------- recetas de fabricación y cocina: ingredientes y cómo se aprende cada una, todo desde los datos
-SKILL = {'Farming': M['Farmer.cs.1991'], 'Mining': M['Farmer.cs.1992'], 'Fishing': M['Farmer.cs.1993'], 'Foraging': M['Farmer.cs.1994'], 'Combat': M['Farmer.cs.1996'], 'Luck': 'Suerte'}
+SKILL = {'Farming': M['Farmer.cs.1991'], 'Mining': M['Farmer.cs.1992'], 'Fishing': M['Farmer.cs.1993'], 'Foraging': M['Farmer.cs.1994'], 'Combat': M['Farmer.cs.1996'], 'Luck': tx('Suerte', 'Luck')}
 NPCN = {k: tr(v['DisplayName']) or k for k, v in CH.items()}
-TV = {v.split('/')[0]: int(k) for k, v in C('Data/TV/CookingChannel.es-ES').items()} if has('Data/TV/CookingChannel.es-ES') else {}
+TV = {v.split('/')[0]: int(k) for k, v in CL('Data/TV/CookingChannel').items()} if has('Data/TV/CookingChannel' + SUF) or has('Data/TV/CookingChannel') else {}
 SOS = strings('SpecialOrderStrings')
 def so_text(s): return re.sub(r'\[([^\]]+)\]', lambda m: SOS.get(m.group(1), m.group(1)), s or '')
 recipe_mail = {}  # carta -> receta que trae
@@ -421,10 +426,12 @@ for k, o in C('Data/SpecialOrders').items():
     for r in o.get('Rewards') or []:
         mk = (r.get('Data') or {}).get('MailReceived') if r.get('Type') == 'Mail' else None
         if mk in recipe_mail: recipe_how[recipe_mail[mk]].append(dict(k='order', npc=NPCN.get(o['Requester'], o['Requester']), name=so_text(o['Name'])))
-EVLOC = {'Farm': 'la granja', 'Beach': LN['Beach'], 'Mountain': LN['Mountain'], 'JoshHouse': M['MapPage.cs.11092'], 'ScienceHouse': M['MapPage.cs.11094'], 'Sunroom': M['MapPage.cs.11078']}
+EVLOC = {'Farm': tx('la granja', 'the farm'), 'Beach': LN['Beach'], 'Mountain': LN['Mountain'], 'JoshHouse': M['MapPage.cs.11092'], 'ScienceHouse': M['MapPage.cs.11094'], 'Sunroom': M['MapPage.cs.11078']}
 for f in sorted(os.listdir(os.path.join(RAW, 'Data/Events'))):
     loc = f.split('.')[0]
-    if not f.endswith('.es-ES.json') and has(f'Data/Events/{loc}.es-ES'): continue
+    if EN and f.endswith('.es-ES.json'): continue
+    if not EN and not f.endswith('.es-ES.json') and has(f'Data/Events/{loc}.es-ES'): continue
+    if f.count('.') > 1 and not f.endswith(SUF + '.json'): continue  # otros idiomas del juego
     for k, v in C('Data/Events/' + f[:-5]).items():
         names = re.findall(r'add(?:Crafting|Cooking)Recipe ([^/"]+)', v)
         mails = [m for m in re.findall(r'(?:addMailReceived|mail(?:Received)?)\s+(\w+)', v) if m in recipe_mail]
@@ -438,7 +445,7 @@ recipe_shop = collections.defaultdict(list)
 for sk, sh in SHOPS.items():
     for it in sh['Items'] or []:
         if it.get('IsRecipe') and it.get('ItemId'):
-            e = dict(k='shop', shop=SHOPN.get(sk, {'DesertTrade': 'Comerciante del desierto'}.get(sk, sk)), price=it['Price'] if it.get('Price', -1) >= 0 else None, cond=cond(it.get('Condition')))
+            e = dict(k='shop', shop=SHOPN.get(sk, {'DesertTrade': tx('Comerciante del desierto', 'Desert Trader')}.get(sk, sk)), price=it['Price'] if it.get('Price', -1) >= 0 else None, cond=cond(it.get('Condition')))
             if it.get('TradeItemId'): e['trade'] = [bare(it['TradeItemId']), it.get('TradeItemAmount', 1)]
             if e not in recipe_shop[it['ItemId']]: recipe_shop[it['ItemId']].append(e)
 for k, r in C('Data/MuseumRewards').items():
@@ -499,9 +506,9 @@ def entra(o, tags, cond):
     return True
 def tag_label(tags):
     for t in tags:
-        if t == 'category_greens': return catname(-81) + ' comestible'
+        if t == 'category_greens': return tx(catname(-81) + ' comestible', 'Edible ' + catname(-81).lower())
         if t in CATTAG: return catname(CATTAG[t])
-        if t == 'edible_mushroom': return 'Hongo comestible'
+        if t == 'edible_mushroom': return tx('Hongo comestible', 'Edible mushroom')
         if t == 'egg_item': return M['CraftingRecipe.cs.572']
     return None
 artisan = []
@@ -573,7 +580,7 @@ def qadd(q, k, v):
     if v not in l: l.append(v)
 for k, b in BIG.items():
     q = '(BC)' + k; n = tr(b['DisplayName']) or b['Name']
-    items[q] = dict(k='BC', n=n, d=tr(b['Description']) or '', p=b['Price'], s=grilla(hoja(b.get('Texture'), 'TileSheets/Craftables'), b['SpriteIndex'], 16, 32), g='Máquinas' if q in MACH else 'Objetos grandes')
+    items[q] = dict(k='BC', n=n, d=tr(b['Description']) or '', p=b['Price'], s=grilla(hoja(b.get('Texture'), 'TileSheets/Craftables'), b['SpriteIndex'], 16, 32), g=tx('Máquinas', 'Machines') if q in MACH else tx('Objetos grandes', 'Big craftables'))
     if sin_traducir(n, b['Name']) or n == '???': items[q]['x'] = 1
 WEAP = C('Data/Weapons')
 WT = {0: M['Tool.cs.14306'], 1: M['Tool.cs.14304'], 2: M['Tool.cs.14305'], 3: M['Tool.cs.14306']}
@@ -581,16 +588,16 @@ for k, w in WEAP.items():
     items['(W)' + k] = dict(k='W', n=tr(w['DisplayName']) or w['Name'], d=tr(w['Description']) or '', s=grilla(hoja(w.get('Texture'), 'TileSheets/weapons'), w['SpriteIndex'], 16, 16),
                             g=WT.get(w['Type']) or tr(WEAP['32']['DisplayName']), wt=w['Type'], dmg=[w['MinDamage'], w['MaxDamage']], spd=w['Speed'], cc=round(w['CritChance'], 4), cm=w['CritMultiplier'],
                             kb=round(w['Knockback'], 2), df=w['Defense'], pr=w['Precision'], aoe=w['AreaOfEffect'])
-BES = C('Data/Boots.es-ES') if has('Data/Boots.es-ES') else {}
+BES = C('Data/Boots.es-ES') if not EN and has('Data/Boots.es-ES') else {}
 for k, v in C('Data/Boots').items():
     p = v.split('/'); pe = BES.get(k, v).split('/')
     nm = hoja(p[9] if len(p) > 9 and p[9] else None, 'Maps/springobjects')
     items['(B)' + k] = dict(k='B', n=pe[6] if len(pe) > 6 else p[6], d=pe[1], p=int(p[2]), s=grilla(nm, int(p[8]) if len(p) > 8 and p[8] else int(k), 16, 16), g=M['Boots.cs.12501'], df=int(p[3]), im=int(p[4]))
-HES = C('Data/hats.es-ES') if has('Data/hats.es-ES') else {}
+HES = C('Data/hats.es-ES') if not EN and has('Data/hats.es-ES') else {}
 for k, v in C('Data/hats').items():
     p = v.split('/'); pe = HES.get(k, v).split('/')
     nm = hoja(p[7] if len(p) > 7 and p[7] else None, 'Characters/Farmer/hats')
-    items['(H)' + k] = dict(k='H', n=pe[5] if len(pe) > 5 and pe[5] else p[0], d=pe[1], s=grilla(nm, int(p[6]) if len(p) > 6 and p[6] else int(k), 20, 20, alto=80), g='Sombreros')
+    items['(H)' + k] = dict(k='H', n=pe[5] if len(pe) > 5 and pe[5] else p[0], d=pe[1], s=grilla(nm, int(p[6]) if len(p) > 6 and p[6] else int(k), 20, 20, alto=80), g=tx('Sombreros', 'Hats'))
 RL = ropa.layout(RAW); SHEETS['ropa'] = ropa.tamano(len(RL))
 for i, (q, kind, v) in enumerate(RL):
     x, y = ropa.celda(i); w = 8 if kind == 'S' else 16
@@ -606,14 +613,14 @@ for k, t in C('Data/Tools').items():
         qsrc[q]['upg'] = dict(de=u.get('RequireToolId'), price=u['Price'] if u.get('Price', -1) >= 0 else t['SalePrice'], trade=[bare(u['TradeItemId']), u.get('TradeItemAmount', 1)] if u.get('TradeItemId') else None)
 for k, t in C('Data/Trinkets').items():
     q = '(TR)' + k
-    items[q] = dict(k='TR', n=tr(t['DisplayName']) or k, d=tr(t['Description']) or '', s=grilla(hoja(t.get('Texture'), 'TileSheets/Objects_2'), t['SheetIndex'], 16, 16), g=U16.get('Trinket', 'Baratija'))
+    items[q] = dict(k='TR', n=tr(t['DisplayName']) or k, d=tr(t['Description']) or '', s=grilla(hoja(t.get('Texture'), 'TileSheets/Objects_2'), t['SheetIndex'], 16, 16), g=U16.get('Trinket', tx('Baratija', 'Trinket')))
     if t.get('DropsNaturally', True): qsrc[q]['azar'] = 1
     if t.get('CanBeReforged', True): items[q]['forja'] = 1
 # Muebles: tamaño del sprite como Furniture.getDefaultSourceRectForType cuando la fila no lo trae.
 FT = {'chair': 0, 'bench': 1, 'couch': 2, 'armchair': 3, 'dresser': 4, 'long table': 5, 'painting': 6, 'lamp': 7, 'decor': 8, 'other': 9, 'bookcase': 10, 'table': 11, 'rug': 12, 'window': 13, 'fireplace': 14, 'bed': 15, 'torch': 16, 'sconce': 17}
 FDEF = {0: (1, 2), 1: (2, 2), 2: (3, 2), 3: (2, 2), 4: (2, 2), 5: (5, 3), 6: (2, 2), 7: (1, 3), 8: (1, 2), 10: (2, 3), 11: (2, 3), 12: (3, 2), 13: (1, 2), 14: (2, 5), 16: (1, 2), 17: (1, 2)}
-FNAME = {'chair': 'Sillas', 'bench': 'Bancos', 'couch': 'Sofás', 'armchair': 'Sillones', 'dresser': 'Cómodas', 'long table': 'Mesas', 'table': 'Mesas', 'painting': 'Cuadros', 'lamp': 'Lámparas', 'decor': M['Object.cs.12859'], 'other': 'Otros muebles',
-         'bookcase': 'Estanterías', 'rug': 'Alfombras', 'window': 'Ventanas', 'fireplace': 'Chimeneas', 'bed': 'Camas', 'bed double': 'Camas', 'bed child': 'Camas', 'torch': 'Antorchas', 'sconce': 'Apliques', 'fishtank': 'Peceras', 'randomized_plant': M['Object.cs.12859']}
+FNAME = {'chair': tx('Sillas', 'Chairs'), 'bench': tx('Bancos', 'Benches'), 'couch': tx('Sofás', 'Couches'), 'armchair': tx('Sillones', 'Armchairs'), 'dresser': tx('Cómodas', 'Dressers'), 'long table': tx('Mesas', 'Tables'), 'table': tx('Mesas', 'Tables'), 'painting': tx('Cuadros', 'Paintings'), 'lamp': tx('Lámparas', 'Lamps'), 'decor': M['Object.cs.12859'], 'other': tx('Otros muebles', 'Other furniture'),
+         'bookcase': tx('Estanterías', 'Bookcases'), 'rug': tx('Alfombras', 'Rugs'), 'window': tx('Ventanas', 'Windows'), 'fireplace': tx('Chimeneas', 'Fireplaces'), 'bed': tx('Camas', 'Beds'), 'bed double': tx('Camas', 'Beds'), 'bed child': tx('Camas', 'Beds'), 'torch': tx('Antorchas', 'Torches'), 'sconce': tx('Apliques', 'Sconces'), 'fishtank': tx('Peceras', 'Fish tanks'), 'randomized_plant': M['Object.cs.12859']}
 FURN = {}
 for k, v in C('Data/Furniture').items():
     p = v.split('/') + [''] * 12; q = '(F)' + k
@@ -630,9 +637,9 @@ def shopname(sk):
     if sk in SHOPN: return SHOPN[sk]
     if sk in CATN: return items[CATN[sk]]['n']
     if sk.startswith('DesertFestival_'):
-        w = sk[15:]; return f"{PFN.get('DesertFestival', sk)} ({NPCN[w] if w in NPCN else 'huevos de calicó' if w == 'EggShop' else w})"
+        w = sk[15:]; return f"{PFN.get('DesertFestival', sk)} ({NPCN[w] if w in NPCN else tx('huevos de calicó', 'calico eggs') if w == 'EggShop' else w})"
     if sk.startswith('Festival_NightMarket'): return PFN.get('NightMarket', sk)
-    return {'HatMouse': f"Ratón de los sombreros ({LN['Forest']})", 'DesertTrade': 'Comerciante del desierto', 'BooksellerTrade': SHOPN['Bookseller']}.get(sk)
+    return {'HatMouse': f"{tx('Ratón de los sombreros', 'Hat Mouse')} ({LN['Forest']})", 'DesertTrade': tx('Comerciante del desierto', 'Desert Trader'), 'BooksellerTrade': SHOPN['Bookseller']}.get(sk)
 QPAT = re.compile(r'\((BC|W|B|H|S|P|T|TR|F)\)')
 for sk, sh in SHOPS.items():
     nombre = shopname(sk)
@@ -679,7 +686,7 @@ for k, r in C('Data/MuseumRewards').items():
     if rid.startswith('(O)') and rid[3:] in sources: sources[rid[3:]].setdefault('museum', []).append(need)
     elif rid in items: qadd(rid, 'museum', need)
 # Cartas que traen objetos adjuntos (%item id ... %%); el título es lo que va después de [#].
-MAILES = C('Data/mail.es-ES') if has('Data/mail.es-ES') else C('Data/mail')
+MAILES = CL('Data/mail')
 for k, v in MAILES.items():
     tit = v.split('[#]')[-1].strip() if '[#]' in v else None
     for m in re.finditer(r'%item (id|object|bigobject|furniture) ([^%]+?) ?%%', v):
@@ -699,7 +706,7 @@ def otags(k, o):
     t |= {tg for tg, c in TAGCAT.items() if o['Category'] == c}
     return t
 OTAGS = {k: otags(k, o) for k, o in OBJ.items() if not objects[k].get('x')}
-SEWN = next((tr(b['DisplayName']) for b in BIG.values() if b['Name'] == 'Sewing Machine'), 'Máquina de coser')
+SEWN = next((tr(b['DisplayName']) for b in BIG.values() if b['Name'] == 'Sewing Machine'), tx('Máquina de coser', 'Sewing Machine'))
 sin_resolver = []
 for r in C('Data/TailoringRecipes'):
     tags = r['SecondItemTags']; ids = sorted((k for k, t in OTAGS.items() if all(x in t for x in tags)), key=lambda k: objects[k]['n'])
@@ -725,7 +732,7 @@ for v in list(objects.values()) + list(items.values()):
 for q in NOTES:
     if q.startswith('(') and q in items: qsrc[q]['note'] = NOTES[q]
 SHEETS.update({nm: SHEETS.get(nm) or list(_Img.open(os.path.join(RAW, t + '.png')).size) for nm, t in (('o', 'Maps/springobjects'), ('o2', 'TileSheets/Objects_2'), ('big', 'TileSheets/Craftables'))})
-MANUAL_WHERE = {'158': dict(loc=M['MapPage.cs.11098'], area='piso 20', ss=ALL_S, lvl=0, boss=False, cond=[], quest=False, isl=False, ev=False, manual=True), '161': dict(loc=M['MapPage.cs.11098'], area='piso 60', ss=ALL_S, lvl=0, boss=False, cond=[], quest=False, isl=False, ev=False, manual=True)}
+MANUAL_WHERE = {'158': dict(loc=M['MapPage.cs.11098'], area=tx('piso 20', 'floor 20'), ss=ALL_S, lvl=0, boss=False, cond=[], quest=False, isl=False, ev=False, manual=True), '161': dict(loc=M['MapPage.cs.11098'], area=tx('piso 60', 'floor 60'), ss=ALL_S, lvl=0, boss=False, cond=[], quest=False, isl=False, ev=False, manual=True)}
 for f in fish:
     if f['id'] in MANUAL_WHERE and not f.get('where'): f['where'] = [MANUAL_WHERE[f['id']]]
 kegFixed = {}
@@ -735,11 +742,12 @@ for r in MACH['(BC)12']['OutputRules']:
         if t.get('RequiredItemId') and o in OBJ: kegFixed[bare(t['RequiredItemId'])] = dict(out=o, n=t.get('RequiredCount', 1), min=r['MinutesUntilReady'])
 times = {k: {r['Id']: r['MinutesUntilReady'] for r in MACH[k]['OutputRules']} for k in ('(BC)12', '(BC)15', '(BC)Dehydrator')}
 prof = {n: dict(name=UI.get('LevelUp_ProfessionName_' + n, n), desc=UI.get('LevelUp_ProfessionDescription_' + n, '')) for n in ('Tiller', 'Artisan', 'Agriculturist', 'Rancher', 'Coopmaster', 'Shepherd', 'Fisher', 'Angler')}
-out = dict(meta=dict(version='1.6.15', lang='es'), objects=objects, crops=crops, trees=trees, fert=fert, fish=fish, animals=animals, buildings=buildings, incubators=inc, villagers=villagers, rooms=list(rooms.values()), remix=remix, sources=sources, prof=prof, seasons=SEASON, kegFixed=kegFixed, machineTimes=times, recipes=recipes, catnames=catnames, festivals=festivals, tvNote=NOTES.get('receta:TV'), artisan=artisan, flowers=flowers, flavNames=flavNames, artNotes={k[4:]: v for k, v in NOTES.items() if k.startswith('art:')}, tapper=TAPPER, items=items, qsources=dict(qsrc), sheets=SHEETS, names=dict(sew=SEWN, adv=SHOPN['AdventureShop'], smith=SHOPN['Blacksmith'], anvil=items.get('(BC)Anvil', {}).get('n', 'Yunque')))
+out = dict(meta=dict(version='1.6.15', lang=LANG), objects=objects, crops=crops, trees=trees, fert=fert, fish=fish, animals=animals, buildings=buildings, incubators=inc, villagers=villagers, rooms=list(rooms.values()), remix=remix, sources=sources, prof=prof, seasons=SEASON, kegFixed=kegFixed, machineTimes=times, recipes=recipes, catnames=catnames, festivals=festivals, tvNote=NOTES.get('receta:TV'), artisan=artisan, flowers=flowers, flavNames=flavNames, artNotes={k[4:]: v for k, v in NOTES.items() if k.startswith('art:')}, tapper=TAPPER, items=items, qsources=dict(qsrc), sheets=SHEETS, names=dict(sew=SEWN, adv=SHOPN['AdventureShop'], smith=SHOPN['Blacksmith'], anvil=items.get('(BC)Anvil', {}).get('n', tx('Yunque', 'Anvil'))))
 os.makedirs(os.path.join(ROOT, 'data'), exist_ok=True)
 js = 'window.SDV=' + json.dumps(out, ensure_ascii=False, separators=(',', ':')) + ';\n'
-open(os.path.join(ROOT, 'data/data.js'), 'w', encoding='utf8').write(js)
-print('data.js', len(js) // 1024, 'KB')
+SALIDA = 'data.en.js' if EN else 'data.js'
+open(os.path.join(ROOT, 'data', SALIDA), 'w', encoding='utf8').write(js)
+print(SALIDA, len(js) // 1024, 'KB')
 print('cultivos', len(crops), 'árboles', len(trees), 'peces', len(fish), 'animales', len(animals), 'aldeanos', len(villagers), 'salas', len(rooms), 'lotes', sum(len(r['bundles']) for r in rooms.values()))
 print('sin zona de pesca:', [f['name'] for f in fish if not f.get('trap') and not f['where']])
 print('sin precio de semilla:', [c['name'] for c in crops if not any(s['price'] for s in c['sources'])])
