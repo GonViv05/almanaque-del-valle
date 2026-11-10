@@ -27,7 +27,7 @@ h1,h2,h3 { font-family:"Pixelify Sans",monospace; margin:0; line-height:1.05; }
 .btn:hover,.btn:focus-visible { background:#fff; transform:translate(2px,2px); box-shadow:inset -3px -3px 0 var(--shadow),2px 2px 0 var(--ink2); }
 .panel { background:var(--peach); border:6px solid var(--wood); outline:4px solid var(--wood2); outline-offset:-10px; padding:32px; margin:0 0 28px; box-shadow:0 6px 0 var(--ink2); }
 .panel h2 { font-size:42px; margin-bottom:16px; }
-.shot { border:5px solid var(--wood); width:100%; height:auto; }
+.shot { width:100%; height:auto; }
 .lead { margin:18px 0 0; font-size:26px; }
 .feat { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px 28px; padding:0; margin:0; list-style:none; }
 .feat b { display:block; font:700 25px "Pixelify Sans",monospace; color:var(--ink2); }
@@ -55,7 +55,7 @@ footer a { color:#fff; }
 <main class="wrap">
   <section class="panel">
     <h2>Qué tenés que hacer hoy</h2>
-    <img class="shot" src="img/granja.png" width="1280" height="800" alt="Mi Granja: cultivos plantados, cosechas del día y cumpleaños">
+    <img class="shot" src="img/granja.png" width="1520" height="1060" alt="Mi Granja: cultivos plantados, cosechas del día y cumpleaños">
     <p class="lead">El almanaque lee tu partida cada vez que dormís: qué está listo para cosechar, quién cumple años y qué le regalás, sin salir a buscarlo.</p>
   </section>
   <section class="panel">
@@ -79,12 +79,20 @@ footer a { color:#fff; }
   <section class="panel">
     <h2>Por dentro</h2>
     <div class="gal">
-      <figure><img class="shot" loading="lazy" src="img/cultivos.png" width="1280" height="800" alt="Tabla de cultivos y calculadora"><figcaption>Cultivos y calculadora de ganancia</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/peces.png" width="1280" height="800" alt="Grilla de peces con filtros"><figcaption>Peces, con los que ya atrapaste marcados</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/aldeanos.png" width="1280" height="800" alt="Fichas de aldeanos"><figcaption>Aldeanos y sus zonas frecuentes</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/centro.png" width="1280" height="800" alt="Lotes del Centro Cívico"><figcaption>Centro Cívico, lote por lote</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/perdibles.png" width="1280" height="800" alt="Objetos perdibles de la estación"><figcaption>Perdibles y siembra más rentable</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/stats.png" width="1280" height="800" alt="Ingresos y niveles"><figcaption>Estadísticas de tu partida</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/cultivos.png" width="1520" height="1060" alt="Cultivos: tabla de la estación y calculadora de ganancia"><figcaption>Cultivos y calculadora de ganancia</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/peces.png" width="1520" height="1060" alt="Peces: grilla con filtros y los que ya atrapaste"><figcaption>Peces, con los que ya atrapaste marcados</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/animales.png" width="1520" height="1060" alt="Animales: productos, precios y ciclo de vida"><figcaption>Animales, productos y precios</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/aldeanos.png" width="1520" height="1060" alt="Aldeanos: cumpleaños, regalos y zonas frecuentes"><figcaption>Aldeanos y sus zonas frecuentes</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/crafteo.png" width="1520" height="1060" alt="Crafteos: recetas aprendidas y cuántas te alcanzan"><figcaption>Crafteos con lo que tenés</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/cocina.png" width="1520" height="1060" alt="Cocina: qué podés cocinar y cómo se consigue cada receta"><figcaption>Cocina de la estación</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/artesanales.png" width="1520" height="1060" alt="Artesanales: qué procesa cada máquina y cuánto vale"><figcaption>Artesanales, máquina por máquina</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/objetos.png" width="1520" height="1060" alt="Objetos: las armas del juego y la ficha de la Espada galaxia"><figcaption>Objetos, cada uno con su ficha</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/centro.png" width="1520" height="1060" alt="Centro Cívico: salas y lotes"><figcaption>Centro Cívico, lote por lote</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/perdibles.png" width="1520" height="1060" alt="Perdibles de la estación y siembra más rentable"><figcaption>Perdibles y siembra más rentable</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/stats.png" width="1520" height="1060" alt="Estadísticas: ingresos, niveles y contadores"><figcaption>Estadísticas de tu partida</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/buscador.png" width="1520" height="1060" alt="Buscador global con resultados de objetos y recetas"><figcaption>Buscador de objetos, aldeanos y recetas</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/aldeano.png" width="1520" height="1060" alt="Ficha de Abigail: dónde está a las 14:00 y qué le encanta"><figcaption>Dónde está cada aldeano a cada hora</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/calendario.png" width="1520" height="1060" alt="Calendario del pueblo con cumpleaños y festivales"><figcaption>Calendario del pueblo</figcaption></figure>
     </div>
   </section>
   <section class="panel" id="instalar">

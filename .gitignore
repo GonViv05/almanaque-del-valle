@@ -11,3 +11,6 @@
 /tools/.venv/
 __pycache__/
 graphify-out/
+
+# Versiones viejas de imágenes mientras se itera el diseño
+descartados/
