@@ -55,7 +55,7 @@ def _cultivo(crop, dirt, loc):
     if crop.findtext('dead') == 'true': return {'muerto': True, 'loc': loc}
     fases = [entero(e.text) for e in crop.findall('phaseDays/int')]
     cur = entero(crop.findtext('currentPhase')); dia = entero(crop.findtext('dayOfCurrentPhase'))
-    if crop.findtext('fullGrown') == 'true': falta = dia  # rebrote: el juego cuenta hacia atrás
+    if crop.findtext('fullGrown') == 'true': falta = max(0, dia)  # rebrote: el juego cuenta hacia atrás y sigue bajando si no se cosecha
     elif not fases or cur >= len(fases) - 1: falta = 0
     else: falta = max(0, fases[cur] - dia) + sum(fases[cur + 1:len(fases) - 1])
     return {'seed': bare(crop.findtext('seedIndex')), 'item': bare(crop.findtext('indexOfHarvest')), 'falta': falta,
