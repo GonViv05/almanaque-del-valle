@@ -1,11 +1,13 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Almanaque del Valle</title>
-<meta name="description" content="La guía de Stardew Valley que conoce tu granja: en español, sin internet y conectada a tu partida.">
+<title>Valley Almanac</title>
+<meta name="description" content="The Stardew Valley guide that knows your farm: in English and Spanish, offline and connected to your save.">
 <link rel="icon" href="img/chirivia.png">
+<link rel="alternate" hreflang="en" href="https://gonviv05.github.io/valley-almanac/">
+<link rel="alternate" hreflang="es" href="https://gonviv05.github.io/valley-almanac/es.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=VT323&display=swap" rel="stylesheet">
@@ -17,7 +19,7 @@ body { margin:0; color:var(--ink); font:23px/1.2 VT323,monospace; background:lin
 img { display:block; max-width:100%; }
 .wrap { max-width:1080px; margin:auto; padding:0 16px; }
 h1,h2,h3 { font-family:"Pixelify Sans",monospace; margin:0; line-height:1.05; }
-.hero { text-align:center; padding:64px 0 48px; color:#fff; }
+.hero { text-align:center; padding:64px 16px 48px; color:#fff; }
 .hero img { width:192px; height:192px; margin:0 auto 16px; image-rendering:pixelated; animation:bota 2.4s steps(6) infinite alternate; }
 .hero h1 { font-size:clamp(46px,9vw,84px); text-shadow:4px 4px 0 var(--wood); }
 .hero p { font-size:32px; margin:16px auto 28px; max-width:680px; text-shadow:2px 2px 0 #24588e; }
@@ -42,84 +44,87 @@ a { color:var(--wood); }
 .note { background:var(--peach2); padding:12px 16px; margin:20px 0 0; border-left:6px solid var(--wood2); }
 footer { text-align:center; color:#fff; padding:8px 0 40px; text-shadow:1px 1px 0 #2d5413; }
 footer a { color:#fff; }
+.idioma { margin:0 0 24px; font-size:24px; text-shadow:2px 2px 0 #24588e; }
+.idioma a { color:#fff; }
 </style>
 </head>
 <body>
 <header class="hero wrap">
-  <img src="img/chirivia.png" width="128" height="128" alt="Chirivía en pixel art">
-  <h1>Almanaque del Valle</h1>
-  <p>La guía de Stardew Valley que conoce tu granja. En español, sin internet y conectada a tu partida.</p>
-  <a class="btn" href="#instalar">Instalar</a>
-  <a class="btn" href="https://github.com/GonViv05/almanaque-del-valle">Ver en GitHub</a>
+  <p class="idioma"><b>English</b> · <a href="es.html" hreflang="es" lang="es">Español</a></p>
+  <img src="img/chirivia.png" width="128" height="128" alt="Pixel art parsnip">
+  <h1>Valley Almanac</h1>
+  <p>The Stardew Valley guide that knows your farm. In English and Spanish, offline and connected to your save.</p>
+  <a class="btn" href="#install">Install</a>
+  <a class="btn" href="https://github.com/GonViv05/valley-almanac">View on GitHub</a>
 </header>
 <main class="wrap">
   <section class="panel">
-    <h2>Qué tenés que hacer hoy</h2>
-    <img class="shot" src="img/granja.png" width="1520" height="1060" alt="Mi Granja: cultivos plantados, cosechas del día y cumpleaños">
-    <p class="lead">El almanaque lee tu partida cada vez que dormís: qué está listo para cosechar, quién cumple años y qué le regalás, sin salir a buscarlo.</p>
+    <h2>What to do today</h2>
+    <img class="shot" src="img/granja.png" width="1520" height="1060" alt="My Farm: planted crops, today's harvests and birthdays">
+    <p class="lead">The almanac reads your save every time you sleep: what's ready to harvest, whose birthday it is and what to give them, without having to look it up.</p>
   </section>
   <section class="panel">
-    <h2>Todo el valle en doce pestañas</h2>
+    <h2>The whole valley in twelve tabs</h2>
     <ul class="feat">
-      <li><b>Mi Granja</b>Lo plantado, las cosechas que vienen y los cumpleaños.</li>
-      <li><b>Cultivos</b>Tabla por estación y calculadora de semillas, abono y ganancia.</li>
-      <li><b>Peces</b>Filtros por estación, clima, hora y zona.</li>
-      <li><b>Animales</b>Ciclo de vida, productos y precios.</li>
-      <li><b>Aldeanos</b>Cumpleaños, regalos favoritos y por dónde andan.</li>
-      <li><b>Crafteos</b>Las recetas que sabés, cuántas te alcanzan y cómo aprender las que faltan.</li>
-      <li><b>Cocina</b>Qué podés cocinar ya, qué conviene en la estación y cómo se consigue cada receta.</li>
-      <li><b>Artesanales</b>Qué procesa cada máquina y qué conviene hacer con lo que tenés.</li>
-      <li><b>Objetos</b>Los más de 2.000 ítems del juego (objetos, armas, ropa, sombreros, muebles…) con su ficha.</li>
-      <li><b>Centro Cívico</b>Salas, lotes y de dónde sale cada objeto.</li>
-      <li><b>Perdibles</b>Lo que se te escapa si no lo hacés esta estación.</li>
-      <li><b>Estadísticas</b>Ingresos, niveles y contadores de tu partida.</li>
+      <li><b>My Farm</b>What's planted, upcoming harvests and birthdays.</li>
+      <li><b>Crops</b>Table by season and a calculator for seeds, fertilizer and profit.</li>
+      <li><b>Fish</b>Filters by season, weather, time and location.</li>
+      <li><b>Animals</b>Life cycle, produce and prices.</li>
+      <li><b>Villagers</b>Birthdays, favorite gifts and where they hang out.</li>
+      <li><b>Crafting</b>The recipes you know, how many you can make and how to learn the rest.</li>
+      <li><b>Cooking</b>What you can cook now, what suits the season and how to get each recipe.</li>
+      <li><b>Artisan Goods</b>What each machine processes and the best use for what you have.</li>
+      <li><b>Items</b>The game's 2,000+ items (objects, weapons, clothing, hats, furniture…), each with its card.</li>
+      <li><b>Community Center</b>Rooms, bundles and where each item comes from.</li>
+      <li><b>Missables</b>What you'll miss if you don't do it this season.</li>
+      <li><b>Stats</b>Income, levels and counters from your save.</li>
     </ul>
-    <p class="lead">Arriba, un buscador para cualquier objeto, aldeano, receta o festival (con dónde está cada aldeano a la hora que elijas) y el calendario del pueblo para saltar a cualquier día.</p>
+    <p class="lead">At the top, a search box for any item, villager, recipe or festival (with where each villager is at the time you pick) and the town calendar to jump to any day. The ES/EN buttons switch the language.</p>
   </section>
   <section class="panel">
-    <h2>Por dentro</h2>
+    <h2>Inside</h2>
     <div class="gal">
-      <figure><img class="shot" loading="lazy" src="img/cultivos.png" width="1520" height="1060" alt="Cultivos: tabla de la estación y calculadora de ganancia"><figcaption>Cultivos y calculadora de ganancia</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/peces.png" width="1520" height="1060" alt="Peces: grilla con filtros y los que ya atrapaste"><figcaption>Peces, con los que ya atrapaste marcados</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/animales.png" width="1520" height="1060" alt="Animales: productos, precios y ciclo de vida"><figcaption>Animales, productos y precios</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/aldeanos.png" width="1520" height="1060" alt="Aldeanos: cumpleaños, regalos y zonas frecuentes"><figcaption>Aldeanos y sus zonas frecuentes</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/crafteo.png" width="1520" height="1060" alt="Crafteos: recetas aprendidas y cuántas te alcanzan"><figcaption>Crafteos con lo que tenés</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/cocina.png" width="1520" height="1060" alt="Cocina: qué podés cocinar y cómo se consigue cada receta"><figcaption>Cocina de la estación</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/artesanales.png" width="1520" height="1060" alt="Artesanales: qué procesa cada máquina y cuánto vale"><figcaption>Artesanales, máquina por máquina</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/objetos.png" width="1520" height="1060" alt="Objetos: las armas del juego y la ficha de la Espada galaxia"><figcaption>Objetos, cada uno con su ficha</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/centro.png" width="1520" height="1060" alt="Centro Cívico: salas y lotes"><figcaption>Centro Cívico, lote por lote</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/perdibles.png" width="1520" height="1060" alt="Perdibles de la estación y siembra más rentable"><figcaption>Perdibles y siembra más rentable</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/stats.png" width="1520" height="1060" alt="Estadísticas: ingresos, niveles y contadores"><figcaption>Estadísticas de tu partida</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/buscador.png" width="1520" height="1060" alt="Buscador global con resultados de objetos y recetas"><figcaption>Buscador de objetos, aldeanos y recetas</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/aldeano.png" width="1520" height="1060" alt="Ficha de Abigail: dónde está a las 14:00 y qué le encanta"><figcaption>Dónde está cada aldeano a cada hora</figcaption></figure>
-      <figure><img class="shot" loading="lazy" src="img/calendario.png" width="1520" height="1060" alt="Calendario del pueblo con cumpleaños y festivales"><figcaption>Calendario del pueblo</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/cultivos.png" width="1520" height="1060" alt="Crops: season table and profit calculator"><figcaption>Crops and profit calculator</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/peces.png" width="1520" height="1060" alt="Fish: filtered grid with the ones you've caught"><figcaption>Fish, with the ones you've caught marked</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/animales.png" width="1520" height="1060" alt="Animals: produce, prices and life cycle"><figcaption>Animals, produce and prices</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/aldeanos.png" width="1520" height="1060" alt="Villagers: birthdays, gifts and places they visit"><figcaption>Villagers and the places they visit</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/crafteo.png" width="1520" height="1060" alt="Crafting: learned recipes and how many you can make"><figcaption>Crafting with what you have</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/cocina.png" width="1520" height="1060" alt="Cooking: what you can cook and how to get each recipe"><figcaption>The season's cooking</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/artesanales.png" width="1520" height="1060" alt="Artisan Goods: what each machine processes and what it's worth"><figcaption>Artisan goods, machine by machine</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/objetos.png" width="1520" height="1060" alt="Items: the game's weapons and the Galaxy Sword card"><figcaption>Items, each with its card</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/centro.png" width="1520" height="1060" alt="Community Center: rooms and bundles"><figcaption>Community Center, bundle by bundle</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/perdibles.png" width="1520" height="1060" alt="This season's missables and the most profitable crops"><figcaption>Missables and the most profitable crops</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/stats.png" width="1520" height="1060" alt="Stats: income, levels and counters"><figcaption>Stats from your save</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/buscador.png" width="1520" height="1060" alt="Global search with item and recipe results"><figcaption>Search for items, villagers and recipes</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/aldeano.png" width="1520" height="1060" alt="Abigail's card: where she is at 14:00 and what she loves"><figcaption>Where each villager is, hour by hour</figcaption></figure>
+      <figure><img class="shot" loading="lazy" src="img/calendario.png" width="1520" height="1060" alt="Town calendar with birthdays and festivals"><figcaption>Town calendar</figcaption></figure>
     </div>
   </section>
-  <section class="panel" id="instalar">
-    <h2>Instalar</h2>
-    <p>Necesitás Stardew Valley instalado (Steam o GOG). El instalador genera la wiki desde tu propia copia del juego.</p>
+  <section class="panel" id="install">
+    <h2>Install</h2>
+    <p>You need Stardew Valley installed (Steam or GOG). The installer builds the wiki from your own copy of the game.</p>
     <div class="os">
       <div>
         <h3>Windows</h3>
-        <p>Descomprimí el ZIP y hacé doble clic en <code>instalar.bat</code>. Si falta Python o Node.js, los instala con winget.</p>
-        <a class="btn" href="https://github.com/GonViv05/almanaque-del-valle/archive/refs/heads/main.zip">Descargar ZIP</a>
+        <p>Unzip it and double-click <code>instalar.bat</code>. If Python or Node.js is missing, it installs them with winget.</p>
+        <a class="btn" href="https://github.com/GonViv05/valley-almanac/archive/refs/heads/main.zip">Download ZIP</a>
       </div>
       <div>
         <h3>macOS</h3>
-        <p>Descomprimí el ZIP, mové la carpeta fuera de Descargas y hacé doble clic en <code>instalar.command</code>. Si falta Node.js, lo instala con Homebrew.</p>
-        <a class="btn" href="https://github.com/GonViv05/almanaque-del-valle/archive/refs/heads/main.zip">Descargar ZIP</a>
+        <p>Unzip it, move the folder out of Downloads and double-click <code>instalar.command</code>. If Node.js is missing, it installs it with Homebrew.</p>
+        <a class="btn" href="https://github.com/GonViv05/valley-almanac/archive/refs/heads/main.zip">Download ZIP</a>
       </div>
       <div>
         <h3>Linux</h3>
-        <p>Con Python 3.9+ y Node.js 22.7+:</p>
-<pre>git clone https://github.com/GonViv05/almanaque-del-valle.git
-cd almanaque-del-valle
+        <p>With Python 3.9+ and Node.js 22.7+:</p>
+<pre>git clone https://github.com/GonViv05/valley-almanac.git
+cd valley-almanac
 sh instalar.sh</pre>
       </div>
     </div>
-    <p class="note">Tus partidas solo se leen. No es un mod y no hace falta SMAPI.</p>
+    <p class="note">Your saves are only read. It's not a mod and doesn't need SMAPI.</p>
   </section>
 </main>
-<footer class="wrap">Proyecto de fans, sin relación con ConcernedApe. Stardew Valley y su arte son propiedad de ConcernedApe.</footer>
+<footer class="wrap">Fan project, not affiliated with ConcernedApe. Stardew Valley and its art belong to ConcernedApe.</footer>
 </body>
 </html>
